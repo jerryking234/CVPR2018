@@ -38,6 +38,7 @@
 \usepackage{booktabs}
 \usepackage{mathrsfs}
 \usepackage{array}
+\usepackage{gensymb}
 
 % Include other packages here, before hyperref.
 
@@ -165,19 +166,14 @@ Here we summarize the correlated works in several aspect without enumerating all
 % pnp
 % marc's paper
 % hongdong's paper
+% silvio's paper
 % posenet related
 % iccv kalman 
 % domain transfer etc
 
 
-\section{Build the data}
+\section{Constructing the data}
 \label{sec:data_collection}
-
-\paragraph{Motivation.}
-As described in the \secref{sub:framework}, our system is performed with available motion sensors and a semantic 3D map. 
-However, similar outdoor dataset produced by prior arts such as KITTI and CityScapes, does not containing such information. As summarized in \tabref{tbl:data}, we list several key properties to perform our experiments. 
-As can be seen, existing ones do not satisfy our requirements, especially for pose estimation, for training, we want the recorded video to roughly cover the 3D environment, so that when new images come in, appearance similar views had been seen during training. This means repeated recording at similar spatial locations are required in the data, which we call temporal variations in \tabref{tbl:data}.
-However, most existing datasets are a temporal snapshot at some locations in the environment, which require us to collect a new dataset ourselves.
 
 \begin{table*}[t]
 \center
@@ -204,13 +200,35 @@ Dataset & Real Data & Camera pose & 3D map & Video per-frame labeling  & Tempora
 \vspace{-0.3\baselineskip}
 \end{table*}
 
+\paragraph{Motivation.}
+As described in the \secref{sub:framework}, our system is performed with available motion sensors and a semantic 3D map. 
+However, similar outdoor dataset produced by prior arts such as KITTI and CityScapes, does not containing such information. As summarized in \tabref{tbl:data}, we list several key properties to perform our experiments. 
+As can be seen, existing ones do not satisfy our requirements, especially for pose estimation, for training, we want the recorded video to roughly cover the 3D environment, so that when new images come in, appearance similar views had been seen during training. This means repeated recording at similar spatial locations are required in the data, which we call temporal variations in \tabref{tbl:data}.
+However, most existing datasets are a temporal snapshot at some locations in the environment, which require us to collect a new dataset ourselves.
+
+\paragraph{Data collection.}
+We use a high resolution LIDAR device called $Riegl$\footnote{http://www.rieglusa.com/index.html} to collect the 3D points, it is a time-of-flight laser radar with multiple wavelengths. 
+However, since the turning rate of the , moving object inside scene will not be captured 
+% talk about registration and removing moving objects inside data
+
+% Undistortion of the image
+
+\paragraph{Data labelling.}
+% talk about labelling in 3D
+Given the 3D data points, we first segment the data in to multiple clusters, and 
+
+% talk about fixing in 2D
+
+In \figref{},  we visualize a snapshot of our dataset, and we recommend to check the labelled videos from our supplementary material for a better sense of the dataset.
+
+
 
 \begin{figure}[t]
 \begin{center}
 \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
 \end{center}
-   \caption{Compare the rendered results with and without point enlargement handled by \equref{eq:label}.}
-\label{fig:render}
+   \caption{Snapshot of our collected data. Compare the rendered results with and without point enlargement handled by \equref{eq:label}.}
+\label{fig:data}
 \end{figure}
 
 \section{Localizing camera and scene parsing.}
@@ -228,7 +246,7 @@ s_c \propto \frac{1}{|\hua{P}_c|}\sum_{\ve{x}\in \hua{P}_c} \min_{\ve{t}\in\hua{
 \end{align}
 where $\hua{P}_c$ is the set of 3D points belong to class $c$, and $\hua{T}$ is the set of camera locations. Then, given the proportion, we rescale the square size within a range between a minimum size and a maximum size, which is set to be $[0.025, 0.05]$.
 
-With such a strategy, as shown by \figref{fig:render}, regions with invalid value in-between projected points are in-painted, meanwhile the the boundaries between different segments are also kept. By feeding in such a rendered map, it facilitates the CNN to better discover scene layouts both for pose estimation and scene parsing.
+With such a strategy, as shown by \figref{fig:data}, regions with invalid value in-between projected points are in-painted, meanwhile the the boundaries between different segments are also kept. By feeding in such a rendered map, it facilitates the CNN to better discover scene layouts both for pose estimation and scene parsing.
 One may wonder why we render semantic label map rather than synthesizing an RGB image for later inputs. 
 This is because intuitively label maps is invariant to color changes, which yields better boundaries reflecting the scene layout. 
 
@@ -279,60 +297,109 @@ In our experiments, we show with pose rendered label map as an additional input,
 \begin{figure*}[]
 \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
    \caption{Architecture of the segment network.}
-\label{fig:segment}
+\label{fig:segnet}
 \end{figure*}
 \paragraph{Segment network architecture.} As illustrated in \figref{fig:segnet}, the segment network contains an encoder-decoder network and a refinement network, and both have similar architecture with the corresponding ones used in DeMoN~\cite{ummenhofer2016demon}. 
 The difference for encoder-decoder network is that for network inputs, rather than directly concatenate the label map with input image, to balance the two, we first transform the label map to a score map through one-hot operation, and embed the score of each pixel to a 32 dimensional feature vector. Then, we concatenate this feature vector with output features from those of the first layer, and keeps the rest as the same with that in~\cite{ummenhofer2016demon}. For refinement network, we use the same strategy to handle the two inputs. Finally, the segment network produce a score map, yielding the semantic label of each pixel.
 
-We train the segment network firstly with only RGB images, then fine-tune the network by adding the input of rendered label maps. This is because our network is trained from scratch, thus needs large amounts of data to learn effective features from the image. However, in our experiments, the rendered label map from the estimated pose has on average 82$\%$ pixel accuracy. This could easily drive the network fitting the input label map at first, while slow down the process towards learning features from images. Finally, for segmentation loss, we use the standard softmax loss, and add intermediate supervision right after the output from encoder and decoder as indicated in \figref{fig:segment}.
+We train the segment network firstly with only RGB images, then fine-tune the network by adding the input of rendered label maps. This is because our network is trained from scratch, thus needs large amounts of data to learn effective features from the image. However, in our experiments, the rendered label map from the estimated pose has on average 82$\%$ pixel accuracy. This could easily drive the network fitting the input label map at first, while slow down the process towards learning features from images. Finally, for segmentation loss, we use the standard softmax loss, and add intermediate supervision right after the output from encoder and decoder as indicated in \figref{fig:segnet}.
 
 
 \section{Experiments}
 \label{sec:experiments}
-\paragraph{Implementation details.} To quickly render from the 3D map, we adopt OpenGL to efficiently render a label map while handling the z-buffer operation. A 512 $\times$ 608 image can be generated in 70ms with a Titan Z GPU. 
+We perform all our experiments using our collected dataset, and evaluate multiple system settings for pose and segment to validate each component. 
+For obtaining GPS and IMU signal, due to at each time step, one sampled noisy signal can obtained. This is limited for training the system. Thus, follow~\cite{}, we simulate GPS and IMU error by adding random noise $\epsilon$ with uniform distribution. Specifically, translation and rotation noise are set as $\epsilon_t \sim U(0, 7.5)$ and rotation $\epsilon_r \sim U(0^{\circ}, 15^{\circ})$ respectively. We refer to realistic data~\cite{} for setting range of simulation noise.
 
-\subsection{Ablation study.}
+In this paper, our data vehicle collected 6 videos at different daytimes surrounding a technology park. The 3D map generated in our experiment has a road length around 3500$m$, and the distance between consecutive frames is around 5$m$ to 10$m$. We use 4 of the videos for training and 2 for testing, yielding 2242 training images and 756 testing images. The semantic classes included in the dataset includes $\{$sky, car-lane, ped-lane, bike-lane, curb, traffic-cone, traffic-stack, traffic-fence, light-pole, traffic-light, tele-pole, traffic-sign, billboard, building, security-stand, plants, object $\}$. In the future, we are targeting at constructing even larger datasets with more semantics.
+
+\paragraph{Implementation details.} To quickly render from the 3D map, we adopt OpenGL to efficiently render a label map while handling the z-buffer operation. A 512 $\times$ 608 image can be generated in 70ms with a single Titan Z GPU, which is also the input size for both pose network and segment network. For segment output, we keep the size the same as input. Both of the network is learned with 'Nadam' optimizer~\cite{} with a learning rate $10^{-3}$. For training pose RNN, we sample a video sequence with 100 frames from the training data. We sequentially train the three models due to GPU memory limitation.
+For pose CNN and segment CNN, we stops at 100 epochs, and for pose RNN, we stops at 200 epochs. For data augmentation, we use the imgaug~\footnote{} library to variate lighting, blurring and flipping. We select a subset from training images for validation trained model from each epoch, and choose the model performing best for evaluation.
+
+For testing, to get a confidence range for the prediction for verifying the effectiveness of each model, we report the standard variation of the results from a 10 time simulation. Finally, we implement all the networks by adopting the MXNet~\cite{} platform. 
+
 
 \paragraph{Pose Evaluation.}
+In \tabref{tbl:pose}, we show the pose estimated results. We first direct following the work of PoseNet~\cite{kendall2017geometric}, and use their published code to train a model. Due to scene appearance similarity (\figref{fig:data}, it does not give reasonable results in our experiments. 
+By using only CNN and coarse pose prior, we can start to learn reasonable relative poses (3rd row), which significantly reduces the pose error. When inserting semantic cues such as road priori and semantic weights in \equref{eq:proj_loss}, the pose results is significantly improved, especially at rotation (4th row). 
+Finally, RNN gives strong cues about the moving speed and acceleration of the camera, yields the best results for both translation and rotation. 
 
 \begin{table}
 \center
-\begin{tabular}{lccccc}
-\toprule[0.2 em]
+\small
+\begin{tabular}{lccc}
+\toprule[0.1 em]
 % \thickhline
-Method &  & Camera pose & 3D map & Video per-frame labeling  & Temporal variations  \\ 
+Method & Trans (m) & Rot ($\circ$) & Pix. Acc($\%$)\\ 
 \hline 
-\multicolumn{1}{l|}{CamVid~\cite{}}     &\checkmark                       & -              & -              &  -  & -  \\
-\multicolumn{1}{l|}{KITTI~\cite{}}      &\checkmark  & \checkmark     & sparse points  & -   & -  \\
-\multicolumn{1}{l|}{CityScapes~\cite{}} &\checkmark  & -              &  -             & selected frames & - \\
-\multicolumn{1}{l|}{Toronto~\cite{}}    &\checkmark  & \checkmark     & sparse points  & selected pixels & - \\
-\hline
-\multicolumn{1}{l|}{Synthia~\cite{}}    & -          & \checkmark     & -       &\checkmark & -    \\ 
-\multicolumn{1}{l|}{Play for benchmark~\cite{}} &-   & \checkmark     & -     &\checkmark & - \\
-\hline 
-\multicolumn{1}{l|}{Ours}              & Real        &\checkmark    &dense point cloud  & \checkmark     &  \checkmark \\
-\toprule[0.2 em]
+PoseNet~\cite{kendall2017geometric} & -  & -  & -  \\
+Coarse pose & 3.35 $\pm$ 2.13 & 7.76 $\pm$ 4.14 & 54.01 $\pm$ 13.04 \\
+Pose CNN w/o semantic & -  & -  & - \\
+Pose CNN w semantic & -  & -  &  -  \\
+Pose RNN w/o CNN & -  & -  &  -  \\
+Pose CNN-RNN     &  &   &  \\
+\toprule[0.1 em]
 \end{tabular}
-\caption{Compare our data with the other related outdoor street-view datasets for our task. 'Real Data' mean whether the data is collected from realistic world. 
-'3D map' means whether it contains 3D map of the whole dataset. 'Video per-frame labeling' means whether it has per-frame per-pixel semantic label. 
-'Temporal variations' mean whether the recorded video can roughly cover the whole scene, but have multiple.}
-\label{tbl:data}
+\caption{Compare the accuracy of different pose networks setting. $\pm$ indicates the confidence region by 10 time simulation.}
+\label{tbl:pose}
 \vspace{-0.3\baselineskip}
-\end{table*}
+\end{table}
 
 \paragraph{Segment Evaluation.}
+In \tabref{tbl:segment}, we show the scene parsing results. We first use one of the state-of-the-art parsing network on the CityScapes \ie ResNet38~\cite{}. It has pre-trained parameters from both ImageNet and CityScapes, running with a 5s per-frame with our resolution. Although the results could be good, it is too slow for real-applications. Our network can run in 0.1s, while yields comparable results (4th row). At 2nd row, we use the ground truth pose to obtain an upper-bound for the segmentation performance. In this case, the projected label map aligns perfect with the image, thus yields significantly better results than the rest. At 3rd row, we train the segment network without pose prior.  Notice that for a fair comparison, after convergence at 100 epoch, we continue train the network another 100 epochs in order to avoid the influence from longer training. 
+At 4th and 5th row, we show the results train with rendered label map from pose CNN and pose CNN-RNN respectively, where better pose can help the segment accuracy get closer to the oracle case, which demonstrate the effectiveness of our strategy. Due to space limit, we leave per-class results to the supplementary.
 
-\paragraph{Qualitative results.}
+% \begin{table*}
+% \center
+% \begin{tabular}{lcccccccccccccccccc}
+% \toprule[0.1 em]
+% %\thickhline
+% Method & mean IOU & sky & car-lane & ped-lane & bike-lane & curb & $t$-cone & $t$-stack & $t$-fence & light-pole & traffic-light & tele-pole & $t$-sign & ad-board & building & security-stand & plants & object \\ 
+% \hline 
+% ResNet38~\cite{} & & &  & & & & & & & & & & & & & & &  \\
+% Segment CNN w oracle pose & & & & & & & & & & & & & & & & & &  \\
+% Segment CNN w/o pose & & & & & & & & & & & & & & & & & &  \\
+% Segment CNN w pose CNN & & & & & & & & & & & & & & & & & & \\
+% Segment CNN w pose CNN-RNN & & & & & & & & & & & & & & & & & & \\
+% \toprule[0.1 em]
+% \end{tabular}
+% \caption{Compare the accuracy of different segment networks setting. $t$ is short for 'traffic' in the table. $\pm$ indicates the confidence region by 10 time GPS simulation.}
+% \label{tbl:segment}
+% \vspace{-0.3\baselineskip}
+% \end{table*}
+\begin{table}[t]
+\center
+\small
+\begin{tabular}{lccc}
+\toprule[0.1 em]
+%\thickhline
+Method &  mIOU ($\%$) & mAcc ($\%$) & Pix. Acc ($\%$)\\
+\hline 
+ResNet38~\cite{} & & &  \\
+SegCNN w/o Pose & & & \\
+SegCNN w pose GT & & & \\
+SegCNN w Pose CNN & & & \\
+SegCNN Final & & & \\
+\toprule[0.1 em]
+\end{tabular}
+\caption{Compare the accuracy of different segment networks setting. $\pm$ indicates the confidence region by 10 time GPS simulation.}
+\label{tbl:segment}
+\vspace{-0.3\baselineskip}
+\end{table}
 
-\paragraph{Discussion.}
-
-\paragraph{Future work.} Since theoretically there exists optimal solutions which enforce the consistency between rendered label map from a camera pose and corresponding semantic segments, 
-later we would like to design a real time solution for finding it for better localization.
-In addition, we would like to model the surfaces which sketch out the 3D map, depend on our point cloud data, based on which a simpler and faster dense segment would performed.
+\paragraph{Qualitative results.} In \figref{fig:results}, we select a subsequence composed of 5 frames to show the results. More results are provided in the supplementary material. At 2nd and 3rd column, we show how the pose network aligns the image with pose from view of camera. At 4th and 5th column, we compare the segment results taking only images as input and those also consider rendered label map. As can be seen at the circled regions, the segment results with pose rendered label maps not only give better accuracy, but also have better temporal consistency.
+\begin{figure*}[t]
+\fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
+   \caption{Results from each intermediate stage out of the system.}
+\label{fig:results}
+\end{figure*}
 
 
 \section{Conclusion}
 \label{sec:conclusion}
+
+\paragraph{Future work.} Since theoretically there exists optimal solutions which enforce the consistency between rendered label map from a camera pose and corresponding semantic segments, 
+later we would like to design a real time solution for finding it for better localization.
+In addition, we would like to model the surfaces which sketch out the 3D map, depend on our point cloud data, based on which a simpler and faster dense segment would performed.
 
 % 
 {\small
