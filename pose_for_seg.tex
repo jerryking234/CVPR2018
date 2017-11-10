@@ -88,14 +88,14 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{DeepLocSeg: 6-DOF Camera Pose Estimation and Scene Parsing of a Video with 3D Semantic Map and Deep CNN-RNN}
+\title{DeepLocSeg: Online Camera Pose Estimation and Scene Parsing with Deep Learning and a 3D Semantic Map}
 
 \maketitle
 %\thispagestyle{empty}
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-Visual-based outdoor navigation requires accurately localizing the camera and preferably per-pixel semantic understanding. It can be widely applied for autonomous driving, or augment reality navigation \etc.
+Visual-based outdoor navigation requires accurately localizing the camera and preferably per-pixel semantic understanding, which can be widely applied for autonomous driving, or augment reality \etc.
 %However, system solely relying on visual signal is non-robust due to visual confusion across multiple scenes. 
 %Thus, coarse signals from motion sensors, \eg GPS and IMU, are usually considered as a localization prior~\cite{}.
 In this paper, we propose a deep learning based method for localizing the camera and parsing the recorded video simultaneously in a single framework, which fuses signals from camera and motion sensors like GPU and IOU.
@@ -104,15 +104,15 @@ In our system, at each timestamp, based on the obtained pose signal, we render a
 Then, a multi-layer recurrent neural network (RNN) is performed afterwards, which captures high-order temporal information that further improve the pose accuracy. 
 Finally, based on the corrected pose from RNN, a new label map is rendered, and is fed into a segment CNN combining with the image, yielding a parsing of the scene.
 In order to perform the experiments,  we build a dataset with a semantic labeled real world 3D map, jointly with many recorded videos with ground truth poses from high accurate motion sensors. 
-We show that practically, pose estimation solely relying on images like PoseNet~\cite{} may fail due to street view confusion, and it is important to fuse multi sensors. In addition, semantic parsing and pose estimation are mutually beneficial in learning more robust networks. Finally, various ablation studies are performed, which demonstrate the effectiveness of the proposed system.
+We show that practically, pose estimation solely relying on images like PoseNet~\cite{Kendall_2015_ICCV} may fail due to street view confusion, and it is important to fuse multi sensors. In addition, semantic parsing and pose estimation are mutually beneficial in learning more robust networks. Finally, various ablation studies are performed, which demonstrate the effectiveness of the proposed system.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
 \label{sec:introduction}
 % the problem we are solving, distinguish with previous problems
-In the applications like navigation, outdoor visual-based 6-DOF camera pose estimation and scene parsing~\cite{} are the center problems attracting much attention in the community of computer vision. 
-Additionally, to acquire better scene understanding for applications like augment reality navigation~\cite{}, parsing each frame of a video is also important.
+In the applications like street navigation~\cite{ohno2003outdoor}, visual-based 6-DOF camera pose estimation~\cite{campbell2017globally,moreno2008pose,Kendall_2015_ICCV,coskun2017long} providing high accuracy attracts much attention in computer vision. 
+Additionally, to acquire better scene understanding for semantics applications such as augment reality~\cite{DBLP:journals/corr/abs-1708-05006}, parsing each frame of a video is also important. 
 
 \begin{figure*}[t]
 \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
@@ -122,32 +122,30 @@ Additionally, to acquire better scene understanding for applications like augmen
 
 % existing methods only consider one of the tasks with soly visual signal. 
 Currently, most existing vision algorithms are trying to solve both of the tasks solely depend on visual signals. 
-For instances, in camera localization, geometric based methods are relying visual feature tracking, \eg systems of SLAM~\cite{}, PTAM~\cite{} and 
-DTAM~\cite{}, where the environment point cloud is reconstructed during the localization. Such systems could be confused of the environment scale and also can not work when staic videos or a single image is provided.
-To handle such senarios, visual feature matching or point cloud matching are oftenly used, \eg system of Perspective-n-Points (PnP)~\cite{}, or patch matching~\cite{}. 
-Most recently, deep learning based methods, \eg either for images~\cite{} or videos~\cite{}, are also proposed for real-time localization, which show superior accuracy and speed tradeoff.
-Nevertheless, single view methods are especially for specified feature rich landmarks, \eg, Cambridge buidings~\cite{}, while could easily fail for street views with very similar appearances.
+For instances, geometric based methods are relying on visual feature matching, \eg system of Perspective-n-Points (PnP)~\cite{haralick1994review,kneip2014upnp,campbell2017globally} when a 3D map and an image is provided, or systems of SLAM~\cite{engel2014lsd,mur2015orb,NewcombeLD11} when it is a video. Such systems are relying on local appearance, which could fail when confronted of low-texture environments.
+ 
+Most recently, deep learning based methods, \eg either for images~\cite{Kendall_2015_ICCV} or videos~\cite{DBLP:journals/corr/ClarkWMTW17}, are proposed for real-time localization, which show much better trade-off between accuracy and speed.
+Nevertheless, those monocular methods are good for environments with rich distinguishable features, \eg, Cambridge landmarks~\cite{Kendall_2015_ICCV}, while could fail for common street views with very similar appearances. For example, when driving forward with same trees beside, can hardly localize the images without external signals.
 
-For scene parsing, approaches~\cite{} based on deep fully convolutional network (FCN)~\cite{} and ResNet~\cite{} are the best algorithms for either single image or multiple frames according to Dataset like CityScape~\cite{}. For video inputs, recent works~\cite{} also try to incorporate the optical flow between consecutive frames, in order to accelerate the parsing and build the consistency along the temperal dimension.
-However, since the camera is recording the same 3D scene, higher order relationship beyond nearby frame should also be considered.
-In order to jointly consider parsing and 3D, prior arts~\cite{} before deep-learning try to do it typically by first do the reconstruction with structure-from-motion (SFM)~\cite{} and then parsing the images, 
- whereas the accuracy of reconstructed 3D from street-view images is limited for real applications.
+For scene parsing, approaches~\cite{ZhaoSQWJ16,ChenPSA17} based on deep fully convolutional network (FCN) with ResNet~\cite{HeZRS15} are the best algorithms for single image according to Dataset like CityScape~\cite{Cordts2016Cityscapes}. When input is videos, researchers~\cite{kundu2016feature,zhu2016deep} may incorporate optical flow between consecutive frames, which accelerates the parsing, and builds the consistency along the temporal dimension. Furthermore, for background, one may factorize the flow to 3D map and pose through structure-from-motion (SFM)~\cite{wu2011visualsfm}, so that jointly parsing and reconstruction~\cite{kundu2014joint} can performed. However, these methods are still not efficient enough and facing challenges of scene variations cross different weathers and cities for real applications.
 
-In our scenario, targeting at a more practical system setting, in addition to online recorded video, for handling the localization confusion of street views, we propose to fuse the coarse GPS and IMU motion signal from corresponding device, which is typically available for current navigation system. Those signals can serve as a pose priori for our deep learning system. 
-For video segmentation, in order to have 3D relationships between different frames, we pre-build a high resolution semantic 3D map based on high accurate LIDAR points recorded by Riegl~\cite{}, which helps construct the correlation in-between multiple frames through the estimated poses. 
-In fact, our setting is realistic when compare with the widely applied commercial navigation system, such as Google Map~\cite{}, we raise the 2D road map to a 3D world, and try to online estimate the 3D camera pose rather than 2D. For 3D map, city scale 3D map has largely already collected from comany like Google Earth~\cite{} and Altzure~\cite{}, and also semantic labeled ones is also built such as Toronto city~\cite{}.
+In our scenario, targeting at a more practical setting, we consider the video is online recorded, and a 3D semantic map is pre-built by us. For handling the localization confusion of street views, we propose to fuse signals from motion sensors like global positioning system (GPS) and inertial measurement unit (IMU), which is typically available for current navigation system. Those signals can be noisy but is crucial as a pose priori for our deep learning system. 
+For video segmentation, we online render images from the 3D map, which serves as a priori for further segmentation, and helps the consistency along the temporal dimension. 
 
-Finally, within such a framework, the pose estimation and scene parsing could be jointly modeled, where pose can help build the correlation between different frames, and reversely, semantics could help align camera poses, yielding better results for both tasks than doing them individually. In our experiments, our system estimates the pose in 10ms with accuracy under 1 degree, and segments the image $512 \times 608$ in less than 100ms with pixel accuracy around 96$\%$, which demonstrates its efficiency and effectiveness.
+% 
+In fact, our problem setting is on par with the widely applied mobile navigation system, whereas the 2D labeled map is raise up to a 3D semantic map, and the problem of 2D pose estimation is changed to 3D camera pose. Promisingly, lots of city scale 3D map has already collected from companies such as Google Earth~\cite{sheppard2009ethics} and Altizure\footnote{https://www.altizure.com/}, and also semantic labeled ones is also built such as Toronto city~\cite{wang2016torontocity}. In our case, we constructed our own data with high quality 3D semantic map, by adopting a high accurate LIDAR device called Riegl\footnote{http://www.rieglusa.com/index.html}.
+
+Last but not the least, within our deep learning framework, the camera pose and semantics are mutually beneficial, where pose helps build the correlation between the 3D semantic map and 2D semantic segments. Reversely, semantics could help align camera poses, yielding better results for both tasks than doing them individually. In our experiments, using a single core of Titan Z GPU, our system estimates the pose in 10ms with accuracy under 1 degree, and segments the image $512 \times 608$ in less than 100ms with pixel accuracy around 96$\%$, which demonstrates its efficiency and effectiveness.
 
 % redefine our problem
 In summary, the contributions of this paper are in three folds:
 \begin{itemize}
-    \item We propose a deep learning based method for fusing multiple sensors, \ie camera, GPS and IMU, which significantly improves the accuracy of awared visual tasks, \ie camera localization and scene parsing.
-    \item We build a system that jointly do 6-DOF camera pose estimate and semantic parsing based on a deep learning strategy, where two kinds of information are mutually beneficial inside.
-    \item To perform the experiments, we apply our system to a dataset recorded from real scene with dense 3D point cloud, ground truth camera poses and pixel-level parsing of every frame, which helps to evaluate the system and hopefully benefit the correlated research field in computer vision.
+    \item We propose a deep learning based system for fusing multiple information, \ie camera, GPS and IMU, and 3D maps, which helps to improve the robustness and accuracy for camera localization and scene parsing.
+    \item In our system, camera pose and scene semantics are handled jointly in both training and testing, where two kinds of information are mutually beneficial.
+    \item To evaluate based on the setting of problem, we construct a dataset from real scenes. It includes dense 3D semantically labelled point cloud, ground truth camera poses and pixel-level parsing of every frame, which we will release in order to benefit the related research in computer vision.
 \end{itemize}
 
-The structure of this paper is organized as follows. In \secref{sec:data_collection}, we first describe how our data is different from the existing outdoor datasets. In addition, we briefly introduce the method how the data is collect and labelled. Then, \secref{sec:localize_and_parsing} presents the framework and detail of our system. The full performance is evaluated quantitatively for both pose estimation and parsing in \secref{sec:experiments}, and \secref{sec:conclusion} concludes the paper and point out future directions. Finally, We will release all our code, models and dataset with the publication of this paper.
+The structure of this paper is organized as follows. We first give a overview of our system in \secref{sub:framework}. In \secref{sec:data_collection}, we first describe how our data is different from the existing outdoor datasets. In addition, we briefly introduce the method how the data is collect and labelled. Then, \secref{sec:localize_and_parsing} presents the framework and detail of our system. The full performance is evaluated quantitatively for both pose estimation and parsing in \secref{sec:experiments}, and \secref{sec:conclusion} concludes the paper and point out future directions. Finally, We will release all our code, models and dataset with the publication of this paper.
 
 
 \subsection{Framework}
@@ -159,22 +157,24 @@ In this system, since our data contains ground truth for both pose and segments,
 \section{Related work}
 \label{sec:related_work}
 Estimating camera pose and parsing images with a video or a single image have long been center problems for computer vision and robotics. 
-Here we summarize the correlated works in several aspect without enumerating all works in relative field due to space limitation. 
-In our problem, we are interested in visual-based street-view cases, thus localization and general parsing in the wild is not in our scope.
+Here we summarize the correlated works in several aspects without enumerating all works in relative field due to space limitation. 
+In our problem, we are interested in visual-based street-view cases, thus localization and general parsing in the wild is out of our scope.
 
 % talk each perspective with image and video
-\textbf{Camera pose estimation.} Traditionally, localizing an image given a set of 3D points is formulated as a Perspective-$n$-Point (P$n$P) problem~\cite{} by matching feature points in 2D and features in 3D through cardinality maximization. Usually in a large environment, a pose prior is required in order to obtain good estimation~\cite{}. Campbell \etal~\cite{} propose a global-optimal solver which leverage the prior. When given a video, relative pose could be further modeled with methods like SLAM~\cite{} etc, which increases the localization accuracy and speed. 
+\textbf{Camera pose estimation.} Traditionally, localizing an image given a set of 3D points is formulated as a Perspective-$n$-Point (P$n$P) problem~\cite{haralick1994review,kneip2014upnp} by matching feature points in 2D and features in 3D through cardinality maximization. Usually in a large environment, a pose prior is required in order to obtain good estimation~\cite{david2004softposit,moreno2008pose}. Campbell \etal~\cite{campbell2017globally} propose a global-optimal solver which leverage the prior. At the case that geo-tagged images are available, Sattler \etal~\cite{sattler2017large} propose to use image-retrieval to avoid matching large-scale point cloud.
+When given a video, relative pose could be further modeled with methods like SLAM~\cite{engel2014lsd} etc, which increases the localization accuracy and speed. 
+
 Although these methods are effective in many cases with distinguished feature points, it is still not practical for city-scale environment with billions of points, and also may fail in low texture, thin structure and occlusions. 
-Thus, recently, deep learned features with CNN is proposed to combine low-level and high-level feature for localization. PoseNet~\cite{} takes an low-resolution image as input, which can estimate pose in 10ms \wrt a feature rich environment composed of distinguished landmarks. 
-Given an video, later works incorporate Bi-Directional LSTM~\cite{} or Kalman filter LSTM~\cite{} to obtain better results with temporal information. However, in street-view scenario, considering a road with trees aside, in most cases, no significant landmark appears, which could fail the visual models. Thus, although noisy, signals from GPS/IMU are a must assistant for localization in these cases, whereas the problem changes to estimating the relative pose between the camera view of a noisy pose and the real pose. To handle this, recently, DeMoN~\cite{ummenhofer2016demon} proposes to concatenate two real images as a network input, while in our case, we concatenate the real image with online rendered label map from the noisy pose, which provides superior results in our experiments.
+Thus, recently, deep learned features with CNN is proposed to combine low-level and high-level feature for localization. PoseNet~\cite{Kendall_2015_ICCV,kendall2017geometric} takes an low-resolution image as input, which can estimate pose in 10ms \wrt a feature rich environment composed of distinguished landmarks. LSTM-PoseNet~\cite{hazirbasimage} further captures a global context after CNN features.
+Given an video, later works incorporate Bi-Directional LSTM~\cite{DBLP:journals/corr/ClarkWMTW17} or Kalman filter LSTM~\cite{coskun2017long} to obtain better results with temporal information. However, in street-view scenario, considering a road with trees aside, in most cases, no significant landmark appears, which could fail the visual models. Thus, although noisy, signals from GPS/IMU are a must assistant for localization in these cases~\cite{vishal2015accurate}, whereas the problem changes to estimating the relative pose between the camera view of a noisy pose and the real pose. To handle this, recently, Researchers ~\cite{laskar2017camera,ummenhofer2016demon} proposes to concatenate two real images as a network input, while in our case, we concatenate the real image with online rendered label map from the noisy pose, which provides superior results in our experiments.
 
-\textbf{Scene parsing.} For parsing a single image, most state-of-the-arts (SOTA) algorithms~\cite{} over street-view datasets like CityScapes~\cite{} are designed based on a FCN~\cite{} and a multi-scale context module with either dilated convolution~\cite{}, pooling~\cite{} or RNN~\cite{}. However, they are dependent on a ResNet~\cite{} with hundreds of layers, which is comparably too heavy for real applications like augment reality. Some researchers apply small models~\cite{} or model compression~\cite{} for acceleration by sacrificing the accuracy. 
-When the input is a video, optical flow~\cite{} between consecutive frames is often performed to transfer label~\cite{} or features~\cite{} from previous frame to current frame for acquiring better temporal consistency. Significant progress has been made, yet the consistency is built through flow, rather than 3D, and camera pose, which is a more compact information to use. In our case, we use the rendered label map from 3D as the prior to the segment network, which leverage the difficulty of scene parsing solely from image cue. For practicality, we also adopt the light weighted network from DeMoN~\cite{ummenhofer2016demon} to keep the system consistent.
+\textbf{Scene parsing.} For parsing a single image, most state-of-the-arts (SOTA) algorithms over street-view datasets like CityScapes~\cite{Cordts2016Cityscapes} are designed based on a FCN~\cite{WuSH16e} and a multi-scale context module with either dilated convolution~\cite{ChenPSA17}, pooling~\cite{ZhaoSQWJ16}, CRF~\cite{} or spatial RNN~\cite{byeon2015scene}. However, they are dependent on a ResNet~\cite{HeZRS15} with hundreds of layers, which is comparably too heavy for real applications like augment reality. Some researchers apply small models~\cite{PaszkeCKC16} or model compression~\cite{ZhaoQSSJ17} for acceleration by sacrificing the accuracy. 
+When the input is a video, spatial-temporal graph is built, Kundu \etal~\cite{kundu2016feature} use 3D dense CRF to get temporal consistent results. Recently, optical flow~\cite{dosovitskiy2015flownet} between consecutive frames is computed to transfer label or features~\cite{gadde2017semantic,zhu2016deep} from previous frame to current.  Significant progress has been made, yet the consistency is built through flow, rather than 3D, and camera pose, which is a more compact information to use. In our case, we use the rendered label map from 3D as the prior to the segment network, which leverage the difficulty of scene parsing solely from image cue. For practicality, we also adopt the light weighted network from DeMoN~\cite{ummenhofer2016demon} to keep the system consistent.
 
 
-\textbf{Joint 2D-3D for video parsing.} Another set of works that could be related with ours is joint reconstruction, pose estimation and parsing~\cite{} through 2D-3D consistency supervised training. 
- Traditionally, those methods are reliance on structure-from-motion (SFM)~\cite{} from feature or photometric matching. Specifically, they reconstruct a 3D map and performing semantic parsing over 2D and 3D jointly, yielding consistent segmentation between multiple frames. 
- Most recently, CNN-SLAM~\cite{} replace the 3D reconstruction using a depth network from a single image, and a segment network for image parsing.
+\textbf{Joint 2D-3D for video parsing.} Another set of works that could be related with ours is joint reconstruction, pose estimation and parsing~\cite{kundu2014joint,hane2013joint} through 2D-3D consistency supervised training. 
+ Traditionally, those methods are reliance on structure-from-motion (SFM)~\cite{hane2013joint} from feature or photometric matching. Specifically, they reconstruct a 3D map and performing semantic parsing over 2D and 3D jointly, yielding consistent segmentation between multiple frames. 
+ Most recently, CNN-SLAM~\cite{tateno2017cnn} replace the 3D reconstruction using a depth network from a single image, and a segment network for image parsing.
  However, all there approaches is processed offline and only for static background, which does not satisfy our online setting. Moreover, the quality of reconstructed 3D is not comparable with the one directly collected from real world.
 % traditional key points, slam etc
 % pnp
@@ -189,7 +189,6 @@ When the input is a video, optical flow~\cite{} between consecutive frames is of
 
 \section{Constructing the data}
 \label{sec:data_collection}
-
 \begin{table*}[t]
 \center
 \begin{tabular}{lccccc}
@@ -197,15 +196,15 @@ When the input is a video, optical flow~\cite{} between consecutive frames is of
 % \thickhline
 Dataset & Real data & Camera pose & 3D map & Video per-frame labeling  & Temporal variations  \\ 
 \hline 
-\multicolumn{1}{l|}{CamVid~\cite{}}     &\checkmark                       & -              & -              &  -  & -  \\
-\multicolumn{1}{l|}{KITTI~\cite{}}      &\checkmark  & \checkmark     & sparse points  & -   & -  \\
-\multicolumn{1}{l|}{CityScapes~\cite{}} &\checkmark  & -              &  -             & selected frames & - \\
-\multicolumn{1}{l|}{Toronto~\cite{}}    &\checkmark  & \checkmark     & sparse points  & selected pixels & - \\
+\multicolumn{1}{l|}{CamVid~\cite{brostow2009semantic}}     &\checkmark                       & -              & -              &  -  & -  \\
+\multicolumn{1}{l|}{KITTI~\cite{geiger2012we}}      &\checkmark  & \checkmark     & sparse points  & -   & -  \\
+\multicolumn{1}{l|}{CityScapes~\cite{Cordts2016Cityscapes}} &\checkmark  & -              &  -             & selected frames & - \\
+\multicolumn{1}{l|}{Toronto~\cite{wang2016torontocity}}    &\checkmark  & \checkmark     & sparse points  & selected pixels & - \\
 \hline
-\multicolumn{1}{l|}{Synthia~\cite{}}    & -          & \checkmark     & -       &\checkmark & -    \\ 
-\multicolumn{1}{l|}{Play for benchmark~\cite{}} &-   & \checkmark     & -     &\checkmark & - \\
+\multicolumn{1}{l|}{Synthia~\cite{RosCVPR16}}    & -          & \checkmark     & -       &\checkmark & -    \\ 
+\multicolumn{1}{l|}{Play for benchmark~\cite{richter2017playing}} &-   & \checkmark     & -     &\checkmark & - \\
 \hline 
-\multicolumn{1}{l|}{Ours}              & Real        &\checkmark    &dense point cloud  & \checkmark     &  \checkmark \\
+\multicolumn{1}{l|}{Ours}              & \checkmark &\checkmark    &dense point cloud  & \checkmark     &  \checkmark \\
 \toprule[0.2 em]
 \end{tabular}
 \caption{Compare our data with the other related outdoor street-view datasets for our task. 'Real data' mean whether the data is collected from realistic world. 
@@ -222,7 +221,8 @@ As can be seen, existing ones do not satisfy our requirements, especially for po
 However, most existing datasets are a temporal snapshot at some locations in the environment, which requires us to collect a new dataset ourselves.
 
 \paragraph{Data collection.}
-We use a LIDAR device called $Riegl$\footnote{http://www.rieglusa.com/index.html} to collect point clouds of the static 3D map with high granularity. As shown in \figref{fig:data}(a). The capture point cloud density is much higher than the Velodyne used by KITTI~\cite{}, and even able to capture the hight change of curb on road. 
+We use a LIDAR device called $Riegl$ to collect point clouds of the static 3D map with high granularity. As shown in \figref{fig:data}(a). The captured point cloud density is much higher than the Velodyne\footnote{http://www.velodynelidar.com/} used by KITTI~\cite{geiger2012we}. 
+% Amazingly, it is even able to capture the hight changes of curb on road. 
 However, different from the sparse LIDAR, the laser of $Reigl$ scanning is horizontally raising from bottom the top, while moving objects will not be captured instantly with a single snapshot, yielding fake points for moving objects. 
 In order to remove those fake object points, thanks to the fact that the 3D world is recorded multiple rounds, and each round has a full coverage of the 3D map, we can use point clouds consistency to handle the issue.
 Specifically, we calibrate the 3D point clouds from different rounds, and put all the points together. From the merged point cloud, the points with high temporal consistency from other rounds are kept, while those with low consistency are removed. Formally, the condition to kept a point $\ve{x}$ in round $j$ is,
@@ -246,13 +246,11 @@ Finally, as shown in \figref{fig:data}(c), the projected label from 3D points is
 With such a strategy, labelling efficiency of video can be vastly increased, avoiding labelling edge rich regions like trees and poles on the street, especially when occlusion is happened.
 We provided the labelled video in our supplementary materials for readers who are interested. 
 
-
-
 \begin{figure}[t]
 \begin{center}
 \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
 \end{center}
-   \caption{Snapshot of our collected data. Compare the rendered results with and without point enlargement handled by \equref{eq:label}.}
+   \caption{Snapshot of our collected data. (a) 3D semantic map. (b) Images. (c) Rendered label map with 3D points (d) Rendered label map with enlarged square. (e) Merge label map with object and sky.}
 \label{fig:data}
 \end{figure}
 
@@ -262,9 +260,9 @@ As shown in \secref{sub:framework}, our full system is based on a semantic 3D ma
 
 \subsection{Render a label map from a camera pose.} 
 \label{sub:render}
-Formally, given a 6-DOF camera pose $\ve{p} = [\ve{q}, \ve{t}]$, where $\ve{q}$ is the quaternion representation of rotation and $\ve{t}$ is translation, a label map can be rendered from the semantic 3D map, where z-buffer~\cite{} is applied to find the closest point at each pixel.
+Formally, given a 6-DOF camera pose $\ve{p} = [\ve{q}, \ve{t}] \in SE(3)$, where $\ve{q} \in SO(3)$ is the quaternion representation of rotation and $\ve{t} \in \mathbbm{R}^3$ is translation, a label map can be rendered from the semantic 3D map, where z-buffer is applied to find the closest point at each pixel.
 
-In our setting, the 3D map is a point cloud based environment which includes 200M points. Although the density of the point cloud is very high (one point per 2.5 centimeters within road regions), when the 3D points are far away from the camera, the projected points could be very sparse, \eg regions of buildings etc.
+In our setting, the 3D map is a point cloud based environment which includes millions of points. Although the density of the point cloud is very high (one point per 2.5 centimeters within road regions), when the 3D points are far away from the camera, the projected points could be very sparse, \eg regions of buildings etc.
 Thus for each point in the environment, we enlarge the 3D point to a square piece where the square size is dependent on its semantic class. Formally, for a 3D point $\ve{x}$ belonging a class $c$, the square size $s_c$ is set to be,
 \begin{align}
 \label{eq:square_size}
@@ -277,7 +275,6 @@ One may wonder why we render semantic label map rather than synthesizing an RGB 
 This is because intuitively label maps is invariant to color changes, which yields better boundaries reflecting the scene layout. 
 
 \subsection{Camera Localization with motion prior}
-\paragraph{Pose rectify with road prior.} 
 
 \begin{figure}[t]
 \begin{center}
@@ -287,12 +284,14 @@ This is because intuitively label maps is invariant to color changes, which yiel
 \label{fig:rnn}
 \end{figure}
 
+\paragraph{Pose rectify with road prior.} Firstly, 
+
 \paragraph{CNN-GRU pose network architecture.} 
 As shown in \figref{fig:framework}, the CNN of our pose network takes as inputs an image $\ve{I}$ and the rendered label map $\ve{L}^c$ from corresponding coarse camera pose $\ve{p}_i^c$. It outputs a 7 dimension vector $\hat{\ve{p}}_i$ representing the relative pose between the image and rendered label map, and the estimated pose respect the world is $\ve{p}_i = \ve{p}_i^c + \hat{\ve{p}_i}$.
-For designing the network, in order to have large kernel to obtain bigger context while keeping the amount of parameters and runtime manageable, we follow the design of Ummenhofer \etal~\cite{}. The convolutional kernel of this network consists a pair of 1D filters in $y$ and $x$-direction, and the encoder gradually reduces the spatial resolution with stride of 2 while increasing the number of channels. We list the details of the network in our implementation details at \secref{sec:experiments}.
+For designing the network, in order to have large kernel to obtain bigger context while keeping the amount of parameters and runtime manageable, we follow the design of Ummenhofer \etal~\cite{ummenhofer2016demon}. The convolutional kernel of this network consists a pair of 1D filters in $y$ and $x$-direction, and the encoder gradually reduces the spatial resolution with stride of 2 while increasing the number of channels. We list the details of the network in our implementation details at \secref{sec:experiments}.
 
 Additionally, after the output pose $\ve{p}_i$ from our pose network, as illustrated in \figref{fig:rnn}, a forward GRU-RNN is performed to model the temporal motion sequence of the video, since the movement of a vehicle is commonly smooth.
-Traditionally in navigation applications of estimating 2D poses,  Kalman filter is applied by calculating either constant velocity or acceleration~\cite{}. 
+Traditionally in navigation applications of estimating 2D poses,  Kalman filter~\cite{kalman1960new} is applied by calculating either constant velocity or acceleration. 
 In our case, transition of camera poses is learned from the training sequences, where the current motion is predicted by the RNN from a sequence of previous predicted poses, which yields further improvement over the estimated poses from the pose CNN.
 
 
@@ -304,7 +303,7 @@ L(\ve{p}, \ve{p}^*) = \sum_{\ve{x} \in \hua{P}}\omega_{l_\ve{x}}|\pi(\ve{x}, \ve
 \label{eq:proj_loss}
 \end{align}
 where $\ve{p}$ and $\ve{p}^*$ are the estimated pose and ground truth pose respectively. $\pi()$ is a projective function that maps a 3D point $\ve{x}$ to 2D image coordinates. $l_\ve{x}$ is the semantic label of $\ve{x}$ and $\omega_{l_\ve{x}}$ is a weight factor depended on the semantics. Here, we set stronger weights for point cloud belong to certain classes like traffic light, and we found it gives better performance for estimated poses.
-In ~\cite{}, usually the 3D points that is visible by the camera are used which helps the stableness of learning. In our case, online searching the visible ones in millions of points are infeasible. 
+In ~\cite{kendall2017geometric}, usually the 3D points that is visible by the camera are used which helps the stableness of learning. In our case, online searching the visible ones in millions of points are infeasible. 
 Thus, we pre-render a depth map for each training image with resolution of $256 \times 304$, using the ground truth pose, and select those points projected on the depth map for training.
 
 % Intuitively, we find the amount of points in each class is dramatically unbalanced, and most points are those on roads and trees. Nevertheless, the appearance variation of road and trees are not very sensitive to pose changes in the street-view scenario. In order to encourage the network to discover more str
@@ -334,18 +333,18 @@ We train the segment network firstly with only RGB images, then fine-tune the ne
 \section{Experiments}
 \label{sec:experiments}
 We perform all our experiments using our collected dataset, and evaluate multiple system settings for pose and segment to validate each component. 
-For obtaining GPS and IMU signal, due to at each time step, one sampled noisy signal can obtained. This is limited for training the system. Thus, follow~\cite{}, we simulate GPS and IMU error by adding random noise $\epsilon$ with uniform distribution. Specifically, translation and rotation noise are set as $\epsilon_t \sim U(0, 7.5)$ and rotation $\epsilon_r \sim U(0^{\circ}, 15^{\circ})$ respectively. We refer to realistic data~\cite{} for setting range of simulation noise.
+For obtaining GPS and IMU signal, due to at each time step, one sampled noisy signal can obtained. This is limited for training the system. Thus, follow~\cite{vishal2015accurate}, we simulate GPS and IMU error by adding random noise $\epsilon$ with uniform distribution. Specifically, translation and rotation noise are set as $\epsilon_t \sim U(0, 7.5)$ and rotation $\epsilon_r \sim U(0^{\circ}, 15^{\circ})$ respectively. We refer to realistic data~\cite{lee2015gps} for setting range of simulation noise.
 
 In this paper, our data vehicle collected 6 videos at different daytimes surrounding a technology park. The 3D map generated in our experiment has a road length around 3500$m$, and the distance between consecutive frames is around 5$m$ to 10$m$. We use 4 of the videos for training and 2 for testing, yielding 2242 training images and 756 testing images. The semantic classes included in the dataset includes $\{$sky, car-lane, ped-lane, bike-lane, curb, traffic-cone, traffic-stack, traffic-fence, light-pole, traffic-light, tele-pole, traffic-sign, billboard, building, security-stand, plants, object $\}$. In the future, we are targeting at constructing even larger datasets with more semantics.
 
-\paragraph{Implementation details.} To quickly render from the 3D map, we adopt OpenGL to efficiently render a label map while handling the z-buffer operation. A 512 $\times$ 608 image can be generated in 70ms with a single Titan Z GPU, which is also the input size for both pose network and segment network. For segment output, we keep the size the same as input. Both of the network is learned with 'Nadam' optimizer~\cite{} with a learning rate $10^{-3}$. For training pose RNN, we sample a video sequence with 100 frames from the training data. We sequentially train the three models due to GPU memory limitation.
+\paragraph{Implementation details.} To quickly render from the 3D map, we adopt OpenGL to efficiently render a label map while handling the z-buffer operation. A 512 $\times$ 608 image can be generated in 70ms with a single Titan Z GPU, which is also the input size for both pose network and segment network. For segment output, we keep the size the same as input. Both of the network is learned with 'Nadam' optimizer~\cite{dozat2016incorporating} with a learning rate $10^{-3}$. For training pose RNN, we sample a video sequence with 100 frames from the training data. We sequentially train the three models due to GPU memory limitation.
 For pose CNN and segment CNN, we stops at 100 epochs, and for pose RNN, we stops at 200 epochs. For data augmentation, we use the imgaug~\footnote{} library to variate lighting, blurring and flipping. We select a subset from training images for validation trained model from each epoch, and choose the model performing best for evaluation.
 
-For testing, to get a confidence range for the prediction for verifying the effectiveness of each model, we report the standard variation of the results from a 10 time simulation. Finally, we implement all the networks by adopting the MXNet~\cite{} platform. 
+For testing, to get a confidence range for the prediction for verifying the effectiveness of each model, we report the standard variation of the results from a 10 time simulation. Finally, we implement all the networks by adopting the MXNet~\cite{ChenLLLWWXXZZ15} platform. 
 
 
 \paragraph{Pose Evaluation.}
-In \tabref{tbl:pose}, we show the pose estimated results. We first direct following the work of PoseNet~\cite{kendall2017geometric}, and use their published code to train a model. Due to scene appearance similarity of the street-view (\figref{fig:data}), it does not give reasonable results, \ie better than the noisy GPS and IMU signal, in our experiments. 
+In \tabref{tbl:pose}, we show the pose estimated results. We first direct following the work of PoseNet~\cite{Kendall_2015_ICCV,kendall2017geometric}, and use their published code to train a model. Due to scene appearance similarity of the street-view (\figref{fig:data}), it does not give reasonable results, \ie better than the noisy GPS and IMU signal, in our experiments. 
 By using only CNN and coarse pose prior, the model can start to learn reasonable relative poses (3rd row), which significantly reduces the pose error. When inserting semantic cues such as road priori and semantic weights in \equref{eq:proj_loss}, the pose results is significantly improved, especially at rotation (4th row). 
 Finally, RNN gives strong cues about the moving speed and acceleration of the camera, yields the best results for both translation and rotation. 
 
@@ -359,10 +358,10 @@ Method & Trans (m) & Rot ($\circ$) & Pix. Acc($\%$)\\
 \hline 
 PoseNet~\cite{kendall2017geometric} & -  & -  & -  \\
 Noisy pose & 3.45 $\pm$ 0.076 & 7.87 $\pm$ 0.10 & 54.01 $\pm$ 0.5 \\
+Pose RNN w/o CNN & 1.282 $\pm$ 0.061  & 1.731 $\pm$ 0.06 &  68.1 $\pm$ 0.32 \\
 Pose CNN w/o semantic & 1.355 $\pm$ 0.052  & 0.982 $\pm$ 0.023 & 70.99 $\pm$ 0.18 \\
 Pose CNN w semantic & 1.331 $\pm$ 0.057  & 0.727 $\pm$ 0.018 & 71.73 $\pm$ 0.18  \\
-Pose RNN w/o CNN & 1.282 $\pm$ 0.061  & 1.731 $\pm$ 0.06 &    \\
-Pose CNN-RNN  & 1.005 $\pm$ 0.044  & 0.719 $\pm$ 0.035  & 73.01 $\pm$ 0.16  \\
+Pose CNN-RNN  & \textbf{1.005} $\pm$ 0.044  & \textbf{0.719} $\pm$ 0.035  & \textbf{73.01} $\pm$ 0.16  \\
 \toprule[0.1 em]
 \end{tabular}
 \caption{Compare the accuracy of different settings for pose estimation. 
@@ -373,7 +372,7 @@ The number after $\pm$ indicates the std from 10 simulations. We can see the imp
 \end{table}
 
 \paragraph{Segment Evaluation.}
-In \tabref{tbl:segment}, we show the scene parsing results. We first use one of the state-of-the-art parsing network on the CityScapes \ie ResNet38~\cite{}. It has pre-trained parameters from both ImageNet and CityScapes, running with a 5s per-frame with our resolution. Although the results could be good, it is too slow for real-applications. Our network can run in 0.1s, while yields comparable results (4th row). At 2nd row, we use the ground truth pose to obtain an upper-bound for the segmentation performance. In this case, the projected label map aligns perfect with the image, thus yields significantly better results than the rest. At 3rd row, we train the segment network without pose prior.  Notice that for a fair comparison, after convergence at 100 epoch, we continue train the network another 100 epochs in order to avoid the influence from longer training. 
+In \tabref{tbl:segment}, we show the scene parsing results. We first use one of the state-of-the-art parsing network on the CityScapes \ie ResNet38~\cite{WuSH16e}. It has pre-trained parameters from both ImageNet and CityScapes, running with a 5s per-frame with our resolution. Although the results could be good, it is too slow for real-applications. Our network can run in 0.1s, while yields comparable results (4th row). At 2nd row, we use the ground truth pose to obtain an upper-bound for the segmentation performance. In this case, the projected label map aligns perfect with the image, thus yields significantly better results than the rest. At 3rd row, we train the segment network without pose prior.  Notice that for a fair comparison, after convergence at 100 epoch, we continue train the network another 100 epochs in order to avoid the influence from longer training. 
 At 4th and 5th row, we show the results train with rendered label map from pose CNN and pose CNN-RNN respectively, where better pose can help the segment accuracy get closer to the oracle case, which demonstrate the effectiveness of our strategy. Due to space limit, we leave per-class results to the supplementary.
 
 % \begin{table*}
@@ -402,7 +401,7 @@ At 4th and 5th row, we show the results train with rendered label map from pose 
 %\thickhline
 Method &  mIOU ($\%$) & mAcc ($\%$) & Pix. Acc ($\%$)\\
 \hline 
-ResNet38~\cite{} & & &  \\
+ResNet38~\cite{WuSH16e} & & &  \\
 SegCNN w/o Pose & & & \\
 SegCNN w pose GT & & & \\
 SegCNN w Pose CNN & & & \\
@@ -426,9 +425,7 @@ SegCNN Final & & & \\
 \label{sec:conclusion}
 In this paper, we present a unified strategy for performing video localization and segmentation with deep CNN and a 3D semantic map. We show that 
 
-\paragraph{Future work.} Since theoretically there exists optimal solutions which enforce the consistency between rendered label map from a camera pose and corresponding semantic segments, 
-later we would like to design a real time solution for finding it for better localization.
-In addition, we would like to simplify the 3D point cloud map by modeling the surfaces, based on which a better and faster rendered label map can generated.
+\paragraph{Future work.} First, we can follow the LSD-SLAM~\cite{engel2014lsd} to further re-localize the camera through perpixel semantic matching, rather than photometric matching, which could potentially further improve the accuracy. In addition, we would like to simplify the 3D point cloud map by modeling the surfaces, based on which a better and faster rendered label map can generated.
 Finally, additional to a relative small data collected in this paper, significantly larger and harder data will be collected. and a much more detailed and concrete description \wrt scaling up the collection will be presented in the near future. 
 
 % 
