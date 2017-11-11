@@ -25,7 +25,7 @@ Finally, RNN gives strong cues about the moving speed and acceleration of the ca
 Method & Trans (m) & Rot ($\circ$) & Pix. Acc($\%$)\\
 \hline
 PoseNet~\cite{kendall2017geometric} & -  & -  & -  \\
-Noisy pose & 3.45 $\pm$ 0.076 & 7.87 $\pm$ 0.10 & 54.01 $\pm$ 0.5 \\
+$\xi$ pose & 3.45 $\pm$ 0.076 & 7.87 $\pm$ 0.10 & 54.01 $\pm$ 0.5 \\
 Pose RNN w/o CNN & 1.282 $\pm$ 0.061  & 1.731 $\pm$ 0.06 &  68.1 $\pm$ 0.32 \\
 Pose CNN w/o semantic & 1.355 $\pm$ 0.052  & 0.982 $\pm$ 0.023 & 70.99 $\pm$ 0.18 \\
 Pose CNN w semantic & 1.331 $\pm$ 0.057  & 0.727 $\pm$ 0.018 & 71.73 $\pm$ 0.18  \\
@@ -33,7 +33,7 @@ Pose CNN-RNN  & \textbf{1.005} $\pm$ 0.044  & \textbf{0.719} $\pm$ 0.035  & \tex
 \toprule[0.1 em]
 \end{tabular}
 \caption{Compare the accuracy of different settings for pose estimation.
-Noisy pose indicates the input signal from GPS, IMU.
+$\xi$ pose indicates the input signal from GPS, IMU.
 The number after $\pm$ indicates the std from 10 simulations. We can see the improvement is statistically significant.}
 \label{tbl:pose}
 \vspace{-0.3\baselineskip}
@@ -45,10 +45,11 @@ At 4th and 5th row, we show the results train with rendered label map from pose 
 
 % \begin{table*}
 % \center
+% \fontsize{6}{7}\selectfont
 % \begin{tabular}{lcccccccccccccccccc}
 % \toprule[0.1 em]
 % %\thickhline
-% Method & mean IOU & sky & car-lane & ped-lane & bike-lane & curb & $t$-cone & $t$-stack & $t$-fence & light-pole & traffic-light & tele-pole & $t$-sign & ad-board & building & security-stand & plants & object \\
+% Method & mean IOU & sky & car-lane & ped-lane & bike-lane & curb & $t$-cone & $t$-stack & $t$-fence & light-pole & traffic-light & tele-pole & $t$-sign & billboard & building & security-stand & plants & object \\
 % \hline
 % ResNet38~\cite{} & & &  & & & & & & & & & & & & & & &  \\
 % Segment CNN w oracle pose & & & & & & & & & & & & & & & & & &  \\
@@ -61,17 +62,18 @@ At 4th and 5th row, we show the results train with rendered label map from pose 
 % \label{tbl:segment}
 % \vspace{-0.3\baselineskip}
 % \end{table*}
+
 \begin{table}[t]
 \center
-\small
 \begin{tabular}{lccc}
 \toprule[0.1 em]
 %\thickhline
 Method &  mIOU ($\%$) & mAcc ($\%$) & Pix. Acc ($\%$)\\
 \hline
 ResNet38~\cite{WuSH16e} & & &  \\
-SegCNN w/o Pose & & & \\
-SegCNN w pose GT & & & \\
+SegCNN w pose GT & 97.1 & 86.8 & 79.37 \\
+SegCNN w/o Pose & 95.6 & 77.1 & 68.35 \\
+SegCNN $\xi$ Pose & 95.6 & 77.1 & 68.35 \\
 SegCNN w Pose CNN & & & \\
 SegCNN Final & & & \\
 \toprule[0.1 em]
