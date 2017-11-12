@@ -22,7 +22,7 @@ This is because intuitively label maps is invariant to color changes, which yiel
 
 \begin{figure}[t]
 \begin{center}
-\fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
+\includegraphics[width=\linewidth]{fig/RNN.pdf}
 \end{center}
    \caption{The GRU RNN network architecture for modeling a sequence of camera poses.}
 \label{fig:rnn}
@@ -34,7 +34,7 @@ This is because intuitively label maps is invariant to color changes, which yiel
 As shown in \figref{fig:framework}, the CNN of our pose network takes as inputs an image $\ve{I}$ and the rendered label map $\ve{L}^c$ from corresponding coarse camera pose $\ve{p}_i^c$. It outputs a 7 dimension vector $\hat{\ve{p}}_i$ representing the relative pose between the image and rendered label map, and the estimated pose respect the world is $\ve{p}_i = \ve{p}_i^c + \hat{\ve{p}_i}$.
 For designing the network, in order to have large kernel to obtain bigger context while keeping the amount of parameters and runtime manageable, we follow the design of Ummenhofer \etal~\cite{ummenhofer2016demon}. The convolutional kernel of this network consists a pair of 1D filters in $y$ and $x$-direction, and the encoder gradually reduces the spatial resolution with stride of 2 while increasing the number of channels. We list the details of the network in our implementation details at \secref{sec:experiments}.
 
-Additionally, after the output pose $\ve{p}_i$ from our pose network, as illustrated in \figref{fig:rnn}, a forward GRU-RNN is performed to model the temporal motion sequence of the video, since the movement of a vehicle is commonly smooth.
+Additionally, after the output pose $\ve{p}_i$ from our pose network, as illustrated in \figref{fig:rnn}, a forward GRU-RNN with residual connection~\cite{wu2016google} is performed to model the temporal motion sequence of the video, since the movement of a vehicle is commonly smooth.
 Traditionally in navigation applications of estimating 2D poses,  Kalman filter~\cite{kalman1960new} is applied by calculating either constant velocity or acceleration.
 In our case, transition of camera poses is learned from the training sequences, where the current motion is predicted by the RNN from a sequence of previous predicted poses, which yields further improvement over the estimated poses from the pose CNN.
 
@@ -64,8 +64,8 @@ Having rectified pose at hand, one may direct render the semantic 3D world to cu
 In our experiments, we show with pose rendered label map as an additional input, the segment results are temporally more consistent and yields better accuracy.
 
 \begin{figure*}[]
-\fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
-   \caption{Architecture of the segment network.}
+\includegraphics[width=\textwidth]{fig/segCNN.pdf}
+\caption{Architecture of the segment network.}
 \label{fig:segnet}
 \end{figure*}
 \paragraph{Segment network architecture.} As illustrated in \figref{fig:segnet}, the segment network contains an encoder-decoder network and a refinement network, and both have similar architecture with the corresponding ones used in DeMoN~\cite{ummenhofer2016demon}.
