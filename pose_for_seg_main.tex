@@ -117,10 +117,11 @@ We show that practically, pose estimation solely relying on images like PoseNet~
 
 \section{Conclusion}
 \label{sec:conclusion}
-In this paper, we present a unified strategy for performing video localization and segmentation with deep CNN and a 3D semantic map. We show that
+In this paper, we present a unified strategy for performing video localization and segmentation with deep CNN and a 3D semantic map, for the applications of augmented reality navigation. The algorithm is simple and run efficient while yielding strong results in parsing backgrounds. 
 
-\paragraph{Future work.} First, we can follow the LSD-SLAM~\cite{engel2014lsd} to further re-localize the camera through perpixel semantic matching, rather than photometric matching, which could potentially further improve the accuracy. In addition, we would like to simplify the 3D point cloud map by modeling the surfaces, based on which a better and faster rendered label map can generated.
-Finally, additional to a relative small data collected in this paper, significantly larger and harder data will be collected. and a much more detailed and concrete description \wrt scaling up the collection will be presented in the near future.
+\paragraph{Future work.} In terms of dataset, additional to a relative small data with few objects used in this paper, yielding limited segment model for object, significantly larger and harder data will be collected in the near future.
+For algorithm, we would like to simplify the 3D point cloud map with 3D models, based on which a better and faster renderring can be performed.
+Moreover, we can follow the LSD-SLAM~\cite{engel2014lsd} to further re-localize the camera through perpixel semantic matching, which could potentially further improve the pose accuracy. 
 
 %
 {\small
