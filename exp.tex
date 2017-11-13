@@ -16,9 +16,9 @@ In \tabref{tbl:pose}, we show the pose estimated results. We first direct follow
 By using only CNN and coarse pose prior, the model can start to learn reasonable relative poses (3rd row), which significantly reduces the pose error. When inserting semantic cues such as road priori and semantic weights in \equref{eq:proj_loss}, the pose results is significantly improved, especially at rotation (4th row).
 Finally, RNN gives strong cues about the moving speed and acceleration of the camera, yields the best results for both translation and rotation.
 
-\begin{table*}
+\begin{table}
 \center
-\small
+\fontsize{8}{9}\selectfont
 \begin{tabular}{lccc}
 \toprule[0.1 em]
 % \thickhline
@@ -37,7 +37,14 @@ $\xi$ pose indicates the input signal from GPS, IMU.
 The number after $\pm$ indicates the std from 10 simulations. We can see the improvement is statistically significant.}
 \label{tbl:pose}
 \vspace{-0.3\baselineskip}
-\end{table*}
+\end{table}
+
+\begin{figure*}
+\includegraphics[width=\textwidth]{fig/results.pdf}
+   \caption{Results from each intermediate stage out of the system.}
+\label{fig:results}
+\vspace{-0.8\baselineskip}
+\end{figure*}
 
 \paragraph{Segment Evaluation.}
 In \tabref{tbl:segment}, we show the scene parsing results. We first use one of the state-of-the-art parsing network on the CityScapes \ie ResNet38~\cite{WuSH16e}. It has pre-trained parameters from both ImageNet and CityScapes, running with a 5s per-frame with our resolution. Although the results could be good, it is too slow for real-applications. Our network can run in 0.1s, while yields comparable results (4th row). At 2nd row, we use the ground truth pose to obtain an upper-bound for the segmentation performance. In this case, the projected label map aligns perfect with the image, thus yields significantly better results than the rest. At 3rd row, we train the segment network without pose prior.  Notice that for a fair comparison, after convergence at 100 epoch, we continue train the network another 100 epochs in order to avoid the influence from longer training.
@@ -63,7 +70,7 @@ At 4th and 5th row, we show the results train with rendered label map from pose 
 % \vspace{-0.3\baselineskip}
 % \end{table*}
 
-\begin{table}[t]
+\begin{table}
 \center
 \fontsize{8}{9}\selectfont
 \begin{tabular}{lccc}
@@ -85,8 +92,3 @@ SegCNN Final & 95.98 $\pm$ 0.004 & 79.36 $\pm$ 0.08 & 69.93 $\pm$ 0.08 \\
 \end{table}
 
 \paragraph{Qualitative results.} In \figref{fig:results}, we select a subsequence composed of 5 frames to show the results. More results are provided in the supplementary material. At 2nd and 3rd column, we show how the pose network aligns the image with pose from view of camera. At 4th and 5th column, we compare the segment results taking only images as input and those also consider rendered label map. As can be seen at the circled regions, the segment results with pose rendered label maps not only give better accuracy, but also have better temporal consistency.
-\begin{figure*}[t]
-\fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
-   \caption{Results from each intermediate stage out of the system.}
-\label{fig:results}
-\end{figure*}
