@@ -98,7 +98,7 @@
 Visual-based outdoor navigation requires accurately localizing the camera and preferably per-pixel semantic understanding, which can be widely applied for autonomous driving, or augment reality \etc.
 %However, system solely relying on visual signal is non-robust due to visual confusion across multiple scenes. 
 %Thus, coarse signals from motion sensors, \eg GPS and IMU, are usually considered as a localization prior~\cite{}.
-In this paper, we propose a deep learning based method for localizing the camera and parsing the recorded video simultaneously in a single framework, which fuses signals from camera and motion sensors like GPU and IOU.
+In this paper, we propose a deep learning based method for localizing the camera and parsing the recorded video simultaneously in a single framework, which fuses signals from camera and motion sensors like GPS and IMU.
 Specifically in our setting, we have a 3D semantic world, and a video is recording online inside, meanwhile a non-accurate camera pose signal is observed. 
 In our system, at each timestamp, based on the obtained pose signal, we render a label map out of the 3D world, and feed it to a pose CNN jointly with the current frame of image, yielding a corrected camera pose. 
 Then, a multi-layer recurrent neural network (RNN) is performed afterwards, which captures high-order temporal information that further improve the pose accuracy. 
