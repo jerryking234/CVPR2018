@@ -6,7 +6,7 @@
 \begin{tabular}{lcccc}
 \toprule[0.2 em]
 % \thickhline
-Dataset & Real data & Camera pose & 3D semantic map & Video per-frame labeling   \\
+Dataset & Real data & Camera pose & 3D semantic map & Video per-pixel label   \\
 \hline
 \multicolumn{1}{l|}{CamVid~\cite{brostow2009semantic}}     &\checkmark        & -              & -              &  -   \\
 \multicolumn{1}{l|}{KITTI~\cite{geiger2012we}}      &\checkmark  & \checkmark     & sparse points  & -   \\
@@ -19,8 +19,8 @@ Dataset & Real data & Camera pose & 3D semantic map & Video per-frame labeling  
 \multicolumn{1}{l|}{Ours}              & \checkmark &\checkmark    &dense point cloud  & \checkmark    \\
 \toprule[0.2 em]
 \end{tabular}
-\caption{Compare our dataset with the other related outdoor street-view datasets for our task. 'Real data' mean whether the data is collected from our physical world.
-'3D semantic map' means whether it contains a 3D map of scenes with object semantic label. 'Per-pixel label' means whether it has per-pixel semantic label.}
+\caption{Compare our dataset with the other related outdoor street-view datasets for our task. 'Real data' means whether the data is collected from our physical world.
+'3D semantic map' means whether it contains a 3D map of scenes with semantic label. 'Video per-pixel label' means whether it has per-pixel semantic label.}
  %'Temporal variations' mean whether the recorded video can roughly cover the whole scene, but have multiple.
 %\textcolor[rgb]{1.00,0.00,0.00}{we don't have temporal varations here, we didn't present results on this point neither, that last column needs to be removed. I would also argue the Toronto one is good.
 %it has 3D model, so it is dense. In the scope of this paper, we want to paint the picture that 3D maps will be available, so we don't want to over-sell the  uniqueness of our data set.  }}
@@ -58,7 +58,7 @@ For video capturing, we use two frontal cameras with a resolution of \by{2048}{2
 \begin{center}
 \includegraphics[width=\linewidth]{fig/dataset.pdf}
 \end{center}
-   \caption{An example of our collected street-view dataset. (a) Image. (b) Rendered label map with 3D points, with invalidn object points (circled in blue). (c)Rendered label map with 3D points after merge. (d) $\&$ (e) Rendered depth map of background and rendered label map with class dependent splatting from 3D points (\secref{sub:render}). (e) Merge label map with missing region in-painted, labelled object and sky.}
+	\caption{An example of our collected street-view dataset. (a) Image. (b) Rendered label map with 3D point cloud projection, with an inaccurate moving object (rider) circled in blue. (c)Rendered label map with 3D point cloud projection after points with low temporal consistency being removed. (d) $\&$ (e) Rendered depth map of background and rendered label map after class dependent splatting in 3D point clouds (\secref{sub:render}). (f) Merged label map with missing region in-painted, moving objects and sky.}
 \label{fig:data}
 \end{figure}
 
@@ -66,14 +66,14 @@ For video capturing, we use two frontal cameras with a resolution of \by{2048}{2
 %\paragraph{Label 3D map and videos.}
 \paragraph{2D and 3D labeling}
 % talk about labelling in 3D
-In order to have semantic labelling of each video frame, we handle static background, static objects (\eg parked vehicles that could be well recognized), and moving objects separately.
+In order to have semantic labelling of each video frame, we handle static background, static objects (\eg parked vehicles that could be well recognized in point clouds), and moving objects separately.
 Firstly, for static background, we directly perform labelling on the 3D point clouds $\hua{M}$ which are then projected to images, yielding labelled background for all the frames.
-Specifically, we over-segment the point cloud data into point clusters based on spatial distances and normal directions, and then label each cluster of points manually.
-Second, for static objects in each round, we prune out the points of static background, and label the remaining points of objects.
+Specifically, we over-segment the point clouds into point clusters based on spatial distances and normal directions, and then label each cluster of points manually.
+Second, for static objects in each round, we prune out the points of static background, and label the remaining points of the objects.
 %Due to the fact that when object is static, \eg parked cars, the shape and location of captured points will be highly recognizable, whereas when the object is moving on the road, the points will be fuzzy, we ask labeller to label those can be well recognized as static objects.
 Thirdly, after 3D-2D projection, only moving objects remain unlabeled. Here, we adopt an active labelling strategy, by first training an object segmentation model using a SOTA algorithm~\cite{WuSH16e}, and then refining the masks of moving objects manually.
 
-As shown in \figref{fig:data}(c), the labels obtained from above three steps are still not perfect. There are some unlabeled pixels that could be caused by missing points or reflection. We handle such issue by using splatting techniques in computer graphics, which is to turn each point into a small squaure as discussed in \secref{sub:render} (\figref{fig:data}(d)). The results are futher refined to genereate the final labels (\figref{fig:data}(e)).
+As shown in \figref{fig:data}(c), the labels obtained from above three steps are still not perfect. There are some unlabeled pixels that could be caused by missing points or reflection. We handle such issue by using splatting techniques in computer graphics, which is to turn each point into a small squaure as discussed in \secref{sub:render} (\figref{fig:data}(e)). The results are futher refined to genereate the final labels (\figref{fig:data}(f)).
 With such a strategy, we can greatly increase labelling efficiency and accuracy. For example, it could be very labor-intensive to label texture-rich regions like trees and poles, especially when occlusion happens.
 We provided the labelled video in our supplementary materials for readers who are interested.
 
