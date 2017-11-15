@@ -29,6 +29,7 @@ $\xi$ pose & 3.45 $\pm$ 0.076 & 7.87 $\pm$ 0.10 & 54.01 $\pm$ 0.5 \\
 Pose RNN w/o CNN & 1.282 $\pm$ 0.061  & 1.731 $\pm$ 0.06 &  68.1 $\pm$ 0.32 \\
 Pose CNN w/o semantic & 1.355 $\pm$ 0.052  & 0.982 $\pm$ 0.023 & 70.99 $\pm$ 0.18 \\
 Pose CNN w semantic & 1.331 $\pm$ 0.057  & 0.727 $\pm$ 0.018 & 71.73 $\pm$ 0.18  \\
+Pose CNN w KF & 1.281 $\pm$ 0.06  & 0.833 $\pm$ 0.01 &   \\
 Pose CNN-RNN  & \textbf{1.005} $\pm$ 0.044  & \textbf{0.719} $\pm$ 0.035  & \textbf{73.01} $\pm$ 0.16  \\
 \toprule[0.1 em]
 \end{tabular}
@@ -41,7 +42,7 @@ The number after $\pm$ indicates the std from 10 simulations. We can see the imp
 
 \begin{figure*}
 \includegraphics[width=\textwidth]{fig/results.pdf}
-   \caption{Results from each intermediate stage out of the system.}
+   \caption{Results from each intermediate stage out of the system. We indicate the }
 \label{fig:results}
 \vspace{-0.8\baselineskip}
 \end{figure*}
@@ -83,10 +84,12 @@ SegCNN w pose GT & 97.1 & 86.8 & 79.37 \\
 SegCNN w/o Pose & 95.61 & 77.09 & 68.35 \\
 % SegCNN $\xi$ Pose & 95.63 $\pm$ 0.02 & 77.39 $\pm$ 0.21 & 68.41 $\pm$ 0.15\\
 SegCNN w Pose CNN & 95.67 $\pm$ 0.01 & 77.95 $\pm$ 0.16 & 68.6 $\pm$ 0.12\\
-SegCNN Final & 95.98 $\pm$ 0.004 & 79.36 $\pm$ 0.08 & 69.93 $\pm$ 0.08 \\
+SegCNN Final & \textbf{95.98} $\pm$ 0.004 & \textbf{79.36} $\pm$ 0.08 & \textbf{69.93} $\pm$ 0.08 \\
 \toprule[0.1 em]
 \end{tabular}
-\caption{Compare the accuracy of different segment networks setting. $\pm$ indicates the standard variation by 10 times GPS simulation.}
+\caption{Compare the accuracy of different network settings. $\pm$ indicates the standard variation by 10 times GPS simulation. 
+The meaning of each label map for an image is indicated by a layout map at left top. 
+Full table for all class accuracy is available in our supplementary materials.}
 \label{tbl:segment}
 \vspace{-0.3\baselineskip}
 \end{table}

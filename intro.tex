@@ -6,7 +6,8 @@ Additionally, to acquire better scene understanding for applications such as aug
 
 \begin{figure*}[t]
 \includegraphics[width=\textwidth]{fig/framework.pdf}
-   \caption{Framework of our proposed system. The black arrows show the testing process and red arrows show the back-propagation in training.}
+\caption{Framework of our proposed system. The black arrows show the testing process, and red arrows indicate a render operation in training and inference. The yellow  The input of system are a online streaming of images and corresponding GPS/IMU signals. The output is camera poses and 
+Details in \secref{sub:framework}.}
 \label{fig:framework}
 \end{figure*}
 
@@ -20,14 +21,13 @@ Nevertheless, those methods are good for environments with rich distinguishable 
 
 For scene parsing, approaches~\cite{ZhaoSQWJ16,ChenPSA17} based on deep fully convolutional network (FCN) with ResNet~\cite{HeZRS15} are the better-performing algorithms for single image input. When the input is video, researchers~\cite{kundu2016feature,zhu2016deep} may incorporate the optical flow between consecutive frames, which not only accelerates the parsing, but also improve temporal consistency. Furthermore, for static background, one may use structure-from-motion (SFM) techniques~\cite{wu2011visualsfm} to jointly parse and reconstruct~\cite{kundu2014joint}. However, these methods can still be fragile in practice.
 
-We aim to solve this camera localization and scene parsing problem from a more practical standpoint. That is, we assume that there will be (a) GPS/IMU signal to provide a rough location estimate; and (b) a semantic 3D map for the static environment. The GPS/IMU signal, even though noisy, serves as the cruicial pose prior for our deep-learning based pose estimation system. The semantic 3D map, which could be rendered to a semantic label map for a given pose, not only provides strong priors for scene parsing, but also helps maintain temporal consistency. 
+We aim to solve this camera localization and scene parsing problem from a more practical standpoint. That is, we assume that there will be (a) GPS/IMU signal to provide a rough location estimate; and (b) a semantic 3D map for the static environment. The GPS/IMU signal, even though noisy, serves as the crucial pose prior for our deep-learning based pose estimation system. The semantic 3D map, which could be rendered to a semantic label map for a given pose, not only provides strong priors for scene parsing, but also helps maintain temporal consistency. 
 
 %In our scenario, targeting at a more practical setting, we consider the video is online recorded, and a 3D semantic map is pre-built by us. For handling the localization confusion of street views, we propose to fuse signals from motion sensors like global positioning system (GPS) and inertial measurement unit (IMU), which is typically available for current navigation system. Those signals can be noisy but is crucial as a pose priori for our deep learning system.
 %For video segmentation, we online render images from the 3D map, which serves as a priori for further segmentation, and helps the consistency along the temporal dimension.
 
 %
-In fact, our problem setting is on par with the widely used mobile navigation system, whereas the 2D labeled map is raise up to a 3D semantic map, and the problem of 2D location estimation is changed to 3D camera pose. Promisingly, with the accelerated development of autonomous driving, city-scale 3D semantic maps are being collected and built (such as the Toronto City dataset~\cite{wang2016torontocity}).  In our case, we constructed our own data with high quality 3D semantic map, which is captured by a high-accuracy mobile LIDAR device from Riegl\footnote{http://www.rieglusa.com/index.html}. 
-
+In fact, our problem setting is on par with the widely used mobile navigation system, whereas the 2D labeled map is raise up to a 3D semantic map, and the problem of 2D location estimation is changed to 3D camera pose. Promisingly, with the accelerated development of autonomous driving, city-scale 3D semantic maps are being collected and built (such as the Toronto City dataset~\cite{wang2016torontocity}).  In our case, we constructed our own data with high quality 3D semantic map, which is captured by a high-accuracy mobile LIDAR device from $Riegl$\footnote{http://www.rieglusa.com/index.html}. 
 
 %lots of city scale 3D map has already collected from companies such as Google Earth~\cite{sheppard2009ethics} and Altizure\footnote{https://www.altizure.com/}, and also semantic labeled ones is also built such as Toronto city~\cite{wang2016torontocity}. In our case, we constructed our own data with high quality 3D semantic map, by adopting a high accuracy mobile LIDAR device from Riegl\footnote{http://www.rieglusa.com/index.html}.
 

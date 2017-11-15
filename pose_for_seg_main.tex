@@ -88,7 +88,7 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{DeepLocSeg: Online Camera Pose Estimation and Scene Parsing with Deep Learning and a 3D Semantic Map}
+\title{DeepLocSeg: Camera Pose Estimation and Scene Parsing with Deep Networks and 3D Semantic Map}
 
 \maketitle
 %\thispagestyle{empty}
@@ -122,10 +122,10 @@ We show that practically, pose estimation solely relying on images like PoseNet~
 
 \section{Conclusion}
 \label{sec:conclusion}
-In this paper, we present a unified strategy for performing video localization and segmentation with deep CNN and a 3D semantic map, for the applications of augmented reality navigation. The algorithm is simple and run efficient while yielding strong results in parsing backgrounds.
+In this paper, we present a unified framework for performing camera pose estimation and semantic parsing with a 3D semantic map and deep networks, for the applications of visual-based autonomous navigation. The algorithm is simple and run efficient while yielding strong results in both self-localization and backgrounds parsing. More importantly, the two information are mutually beneficial, where pose helps give good priori for segmentation and semantic guides a better localization.
 
-\paragraph{Future work.} In terms of dataset, additional to a relative small data with few objects used in this paper, yielding limited segment model for object, significantly larger and harder data will be collected in the near future.
-For algorithm, we would like to simplify the 3D point cloud map with 3D models, based on which a better and faster renderring can be performed.
+In the near future, we plan to extend in several aspects. In terms of dataset, additional to a relative small data with few objects used in this paper, yielding limited segment model for object, significantly larger and harder data will be collected in the near future.
+For algorithm, we would like to simplify the 3D point cloud map with 3D models of road and buildings, based on which a better and faster renderring can be performed.
 Moreover, we can follow the LSD-SLAM~\cite{engel2014lsd} to further re-localize the camera through perpixel semantic matching, which could potentially further improve the pose accuracy.
 
 %
