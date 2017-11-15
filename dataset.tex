@@ -19,19 +19,19 @@ Dataset & Real data & Camera pose & 3D semantic map & Video per-frame labeling  
 \multicolumn{1}{l|}{Ours}              & \checkmark &\checkmark    &dense point cloud  & \checkmark    \\
 \toprule[0.2 em]
 \end{tabular}
-\caption{Compare our data with the other related outdoor street-view datasets for our task. 'Real data' mean whether the data is collected from realistic world.
-'3D semantic map' means whether it contains a 3D semantic map of the whole dataset. 'Video per-frame labeling' means whether it has per-frame per-pixel semantic label.}
+\caption{Compare our dataset with the other related outdoor street-view datasets for our task. 'Real data' mean whether the data is collected from our physical world.
+'3D semantic map' means whether it contains a 3D map of scenes with object semantic label. 'Per-pixel label' means whether it has per-pixel semantic label.}
  %'Temporal variations' mean whether the recorded video can roughly cover the whole scene, but have multiple.
-%\textcolor[rgb]{1.00,0.00,0.00}{we don't have temporal varations here, we didn't present results on this point neither, that last column needs to be removed. I would also argue the Toronto one is good. 
+%\textcolor[rgb]{1.00,0.00,0.00}{we don't have temporal varations here, we didn't present results on this point neither, that last column needs to be removed. I would also argue the Toronto one is good.
 %it has 3D model, so it is dense. In the scope of this paper, we want to paint the picture that 3D maps will be available, so we don't want to over-sell the  uniqueness of our data set.  }}
 \label{tbl:data}
 \vspace{-0.3\baselineskip}
 \end{table*}
 
 \paragraph{Motivation.}
-As described in the \secref{sub:framework}, our system is performed with available motion sensors and a semantic 3D map.
-However, similar outdoor dataset produced by prior arts such as KITTI and CityScapes, does not contain such information, in particular the 3D map. The Tortoro City dataset~\cite{wang2016torontocity} that may be used is not open to public yet. As summarized in \tabref{tbl:data}, we list several key properties that are required to perform our experiments.
-Note that none of existing public dataset satisfy our requirements, especially for pose estimation. 
+As described in the \secref{sub:framework}, our system is design to work with available motion sensors and a semantic 3D map.
+However, similar outdoor datasets such as KITTI and CityScapes do not contain such information, in particular the 3D map. The Tortoro City dataset~\cite{wang2016torontocity} that may be used is not open to public yet. As summarized in \tabref{tbl:data}, we list several key properties that are required to perform our experiments.
+Note that none of existing public dataset satisfy our requirements.
 % \textcolor[rgb]{1.00,0.00,0.00}{as I explained in the table, I suggest that we drop this argument, we need to have a 3D semantic map, none has it. the temporal effect needs to be tuned down, otherwise, it will be viewed as too narraow}
 % for training, we want the recorded video to roughly cover the 3D environment, so that when new images come in, appearance similar views had been seen during training. This means repeated recording at similar spatial locations are required in the data, which we call temporal variations in \tabref{tbl:data}.
 % However, most existing datasets are a temporal snapshot at some locations in the environment, which requires us to collect a new dataset ourselves.
@@ -58,7 +58,7 @@ For video capturing, we use two frontal cameras with a resolution of \by{2048}{2
 \begin{center}
 \includegraphics[width=\linewidth]{fig/dataset.pdf}
 \end{center}
-   \caption{A snapshot of our collected street-view dataset at the view of a camera. (a) Image. (b) Rendered label map with 3D points, with fake object points (circled in blue). (c)Rendered label map with 3D points after fake points removal. (d) $\&$ (e) Rendered depth map of background and rendered label map with class dependent splatting from 3D points (\secref{sub:render}). (e) Merge label map with missing region in-painted, labelled object and sky.}
+   \caption{An example of our collected street-view dataset. (a) Image. (b) Rendered label map with 3D points, with invalidn object points (circled in blue). (c)Rendered label map with 3D points after merge. (d) $\&$ (e) Rendered depth map of background and rendered label map with class dependent splatting from 3D points (\secref{sub:render}). (e) Merge label map with missing region in-painted, labelled object and sky.}
 \label{fig:data}
 \end{figure}
 
