@@ -47,7 +47,7 @@ Note that none of existing public dataset satisfy our requirements.
 \textbf{Data collection.}
 We use a mobile LIDAR scanner from $Riegl$ to collect point clouds of the static 3D map with high granularity. As shown in \figref{fig:data}(a). The captured point cloud density is much higher than the Velodyne\footnote{http://www.velodynelidar.com/} used by KITTI~\cite{geiger2012we}.
 % Amazingly, it is even able to capture the hight changes of curb on road.
-Different from the sparse Velodyne LIDAR, our mobile scanner utilizes two laser beams to scan vertical circles. As the accquisition vehicle moves, it scans its surroundings as a push-broom camera. However, moving objects, such as vehicles and pedestrians, could be compressed, expanded, or completely missing in the captured point clouds.
+Different from the sparse Velodyne LIDAR, our mobile scanner utilizes two laser beams to scan vertical circles. As the acquisition vehicle moves, it scans its surroundings as a push-broom camera. However, moving objects, such as vehicles and pedestrians, could be compressed, expanded, or completely missing in the captured point clouds.
 In order to eliminate these inaccurate moving objects (circled in blue at \figref{fig:data}(b)), we conduct three steps:
 1) scan the same road segment multiple rounds; 2) align and fuse those point clouds; 3) remove the points with low temporal consistency.
 Formally, the condition to kept a point $\ve{x}$ in round $j$ is,
@@ -85,7 +85,7 @@ Second, for static objects in each round, we prune out the points of static back
 %Due to the fact that when object is static, \eg parked cars, the shape and location of captured points will be highly recognizable, whereas when the object is moving on the road, the points will be fuzzy, we ask labeller to label those can be well recognized as static objects.
 Thirdly, after 3D-2D projection, only moving objects remain unlabeled. Here, we adopt an active labelling strategy, by first training an object segmentation model using a SOTA algorithm~\cite{WuSH16e}, and then refining the masks of moving objects manually.
 
-As shown in \figref{fig:data}(c), the labels obtained from above three steps are still not perfect. There are some unlabeled pixels that could be caused by missing points or reflection. We handle such issue by using splatting techniques in computer graphics, which is to turn each point into a small squaure as discussed in \secref{sub:render} (\figref{fig:data}(e)). The results are futher refined to genereate the final labels (\figref{fig:data}(f)).
+As shown in \figref{fig:data}(c), the labels obtained from above three steps are still not perfect. There are some unlabeled pixels that could be caused by missing points or reflection. We handle such issue by using splatting techniques in computer graphics, which is to turn each point into a small square as discussed in \secref{sub:render} (\figref{fig:data}(e)). The results are further refined to generate the final labels (\figref{fig:data}(f)).
 With such a strategy, we can greatly increase labelling efficiency and accuracy. For example, it could be very labor-intensive to label texture-rich regions like trees and poles, especially when occlusion happens.
 We provided the labelled video in our supplementary materials for readers who are interested.
 

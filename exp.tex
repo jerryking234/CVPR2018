@@ -12,14 +12,14 @@ In this paper, our acquisition vehicle scans a technology park for 6 rounds duri
 
 \textbf{Implementation details.} To quickly render from the 3D map, we adopt OpenGL to efficiently render a label map with the z-buffer handling. A 512 $\times$ 608 image can be generated in 70ms with a single Titan Z GPU, which is also the input size for both pose CNN and segment CNN. 
 For pose CNN, the filter sizes of all layers are $\{32, 32, 64, 128, 256, 1024, 128, 7\}$, and the forward speed for each frame is 9ms. For pose RNN, we sample sequences with length of 100 from our data for training, and the speed for each frame is 0.9ms on average.
-For segment CNN, we keep the size the same as input, and the forward times is 90ms. 
+For segment CNN, we keep the size the same as input, and the forward time is 90ms. 
 Both of the network is learned with 'Nadam' optimizer~\cite{dozat2016incorporating} with a learning rate of $10^{-3}$. We sequentially train these three models due to GPU memory limitation.
 Specifically, for pose CNN and segment CNN, we stops at 150 epochs when there is no performance gain, and for pose RNN, we stops at 200 epochs. For data augmentation, we use the imgaug\footnote{https://github.com/aleju/imgaug} library to add lighting, blurring and flipping variations. We keep a subset from training images for validating the trained model from each epoch, and choose the model performing best for evaluation.
 
 % <<<<<<< HEAD
 For testing, since input GPS/IMU varies every time, \ie~$\ve{p}_t^c=\ve{p}^*+\epsilon$, we need to have a confidence range of prediction for both camera pose and image segment, in order to verify the improvement of each component we have is significant. Specifically, we report the standard variation of the results from a 10 time simulation to obtain the confidence range. Finally, we implement all the networks by adopting the MXNet~\cite{ChenLLLWWXXZZ15} platform.
 
-For pose evaluation, we use the median translation offset and median relative angle~\cite{Kendall_2015_ICCV}. For evaluating segment, we adopt the commonly use pixel accuracy (Pix. Acc.), mean class accuracy (mAcc.) and mean intersect-over-union (mIOU) as that from~\cite{WuSH16e}.
+For pose evaluation, we use the median translation offset and median relative angle~\cite{Kendall_2015_ICCV}. For evaluating segment, we adopt the commonly used pixel accuracy (Pix. Acc.), mean class accuracy (mAcc.) and mean intersect-over-union (mIOU) as that from~\cite{WuSH16e}.
 % =======
 % % not clear
 % For testing, since input GPS/IMU contains variations, \ie $\ve{p}_t^c \sim \ve{p}^* + \epsilon$, we need to have a confidence range of prediction for both camera pose and image segmentation, in order to verify the improvement of each component we have is significant. Specifically, we report the standard variation of the results from a 10 time simulation to obtain the confidence range. Finally, we implement all the networks by adopting the MXNet~\cite{ChenLLLWWXXZZ15} platform.
@@ -67,7 +67,7 @@ In \tabref{tbl:pose}, we show the performance of estimated translation $\ve{t}$ 
 Due to scene appearance similarity of the street-view, we did not obtain a reasonable model, \ie~results better than the noisy GPS/IMU signal.
 At the 2nd row, we show the median error of GPS and IMU from our simulation. 
 At the 3rd row, by using our pose CNN, the model can learn good relative pose between camera and GPS/IMU, which significantly reduces the error (60$\%$ for $\ve{t}$, 85$\%$ for $\ve{r})$. 
-By adding semantic cues, \ie road priori and semantic weights in \equref{eq:proj_loss}, the pose errors are further reduced, especially for rotation (from $0.982$ to $0.727$ at the 4th row). Actually, we found the most improvement is from semantic weighting, while the road priori helps marginally in this experiment. However, later, we would like to experiment larger noise and more data variations, which will better validate different cues.
+By adding semantic cues, \ie road priori and semantic weights in \equref{eq:proj_loss}, the pose errors are further reduced, especially for rotation (from $0.982$ to $0.727$ at the 4th row). In fact, we found the most improvement is from semantic weighting, while the road priori helps marginally in this experiment. In our future work, we would like to experiment larger noise and more data variations, which will better validate different cues.
 
 For evaluating an video input, we setup a baseline of performing RNN directly on the GPS/IMU signal, and as shown at 'Pose RNN w/o CNN', the estimated $\ve{t}$ is even better than pose CNN, while $\ve{r}$ is comparably much worse. This meets our expectation since the speed of camera is easier to capture temporally than rotation. Another baseline we adopt is performing Kalman filter~\cite{kalman1960new} to the output from Pose CNN by assuming a constant speed which we set as the averaged speed from training sequences. As shown at 'Pose CNN w KF', it does improve slightly for translation, but harms rotation, which means the filter over smoothed the sequence. Finally when combining pose CNN and RNN, it achieves the best pose estimation both for $\ve{t}$ and $\ve{r}$.
 
@@ -108,12 +108,12 @@ SegCNN Final    &\textbf{69.93}$\pm$0.08  & \textbf{79.36}$\pm$0.08 &\textbf{95.
 \textbf{Segment Evaluation.}
 In \tabref{tbl:segment}, we show the scene parsing results. 
 % <<<<<<< HEAD
-Firstly, we adopt one of the SOTA parsing network on the CityScapes, \ie~ResNet38~\cite{WuSH16e}, and train it with our data. It has pre-trained parameters from the ImageNet~\cite{deng2009imagenet} dataset, and run with a 1.03$s$ per-frame with our resolution. As shown at the 1st row, it achieve reasonable accuracy compare to our segment CNN (2nd row) when there is no pose priori. However, our network is 10x faster, and runs in 90ms. 
+Firstly, we adopt one of the SOTA parsing network on the CityScapes, \ie~ResNet38~\cite{WuSH16e}, and train it with our data. It utilizes pre-trained parameters from the CityScapes~\cite{Cordts2016Cityscapes} dataset, and run with a 1.03$s$ per-frame with our resolution. As shown at the 1st row, it achieve reasonable accuracy compare to our segment CNN (2nd row) when there is no pose priori. However, our network is 10x faster, and runs in 90ms. 
 At 3rd row, we use the ground truth pose rendered label map as segment CNN priori to obtain an upper-bound for the segmentation performance. 
-In this case, the rendered label map aligns perfect with the image, thus yields significantly better results without miss classify most of the static background.
+In this case, the rendered label map aligns perfectly with the image, thus yields significantly better results without misclassify most of the static background.
 % At 4th row, we train the segment network without pose prior.  
 At 4th and 5th row, we show the results trained with rendered label map from pose CNN and pose CNN-RNN respectively. We can see using pose CNN, the results just improve slightly compare to the segment CNN, from our observation, this is because the offset is still significant for some detailed structures, \eg light-pole.
-Notice that for a fair comparison, after convergence segment CNN, we continue train the network another 100 epochs in order to avoid the influence from longer training.
+Notice that for a fair comparison, after convergence of segment CNN, we continue training the network another 100 epochs in order to avoid the influence from longer training.
 % =======
 % Firstly, we adopt one of the SOTA parsing network on the CityScapes, \ie ResNet38~\cite{WuSH16e}, and train it with our data. It has pre-trained parameters from the ImageNet~\cite{deng2009imagenet} dataset, and run with a 1.03$s$ per-frame with our resolution. As shown at the 1st row, it achieve reasonable accuracy compare to our segment CNN (2nd row) when there is no pose priori. 
 % However, our network is 10x faster, and runs in 90ms. 
