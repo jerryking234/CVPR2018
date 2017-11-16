@@ -11,10 +11,12 @@ Formally, given a 6-DOF camera pose $\ve{p} = [\ve{q}, \ve{t}] \in SE(3)$, where
 
 In our setting, the 3D map is a point cloud based environment. Although the density of the point cloud is very high (one point per 25mm within road regions), when the 3D points are far away from the camera, the projected points could be sparse, \eg regions of buildings shown in \figref{fig:data}(c).
 Thus for each point in the environment, we adopt the splatting technique in computer graphics, by enlarging the 3D point to a square where the square size is determined by its semantic class. Formally, for a 3D point $\ve{x}$ belonging a class $c$, its square size $s_c$ is set to be proportional to the class' average distance to the camera. Formally,
+{\vspace{-0.3\baselineskip}
 \begin{align}
 \label{eq:square_size}
 s_c \propto \frac{1}{|\hua{P}_c|}\sum_{\ve{x}\in \hua{P}_c} \min_{\ve{t}\in\hua{T}} d(\ve{x}, \ve{t})
 \end{align}
+}
 where $\hua{P}_c$ is the set of 3D points belong to class $c$, and $\hua{T}$ is the set of ground truth camera poses. Then, given the relative square size between different classes, in order to obtain the absolute size for rendering, we have to define an absolute range. This is non-trivial since too large size will result in dilated edges, while too small size will yield many holes. In our experiments, we set the range as $[0.025, 0.05]$, and found it provide the highest visual quality.
 
 As shown in \figref{fig:data}(e), invalid values in-between those projected points are well in-painted, meanwhile the boundaries separating different semantic classes are also well preserved. Later, we insert such a rendered label map for the pose CNN, which guides the network to localize the camera.
@@ -62,15 +64,15 @@ More specifically, we adopt a two layer GRU with 32 hidden states as illustrated
 In traditional navigation applications of estimating 2D poses,  Kalman filter~\cite{kalman1960new} is commonly applied by assuming either a constant velocity or acceleration.
 In our case, due to the speed of vehicle is unknown, transition of camera poses is learned from the training sequences, and in our experiments we show that the motion predicted from RNN is better than using a Kalman filter with a constant of speed, yielding further improvement over the estimated ones from our pose CNN.
 
-
-
 \textbf{Pose loss.}
 Following the PoseNet~\cite{kendall2017geometric}, we use the geometric matching loss for training, which avoids the balancing factor between rotation and translation.
 Formally, given a set of point cloud in 3D $~\hua{P}=\{\ve{x}\}$, and the loss for each image is written as,
+{\vspace{-0.5\baselineskip}
 \begin{align}
 L(\ve{p}, \ve{p}^*) = \sum_{\ve{x} \in \hua{P}}\omega_{l_\ve{x}}|\pi(\ve{x}, \ve{p}) - \pi(\ve{x}, \ve{p}^*)|_2
 \label{eq:proj_loss}
 \end{align}
+}
 where $\ve{p}$ and $\ve{p}^*$ are the estimated pose and ground truth pose respectively. $\pi()$ is a projective function that maps a 3D point $\ve{x}$ to 2D image coordinates. $l_\ve{x}$ is the semantic label of $\ve{x}$ and $\omega_{l_\ve{x}}$ is a weight factor dependent on the semantics. Here, we set stronger weights for point cloud belong to certain classes like traffic light, and we find it helps pose CNN to achieve better performance.
 In~\cite{kendall2017geometric}, usually the 3D points visible to the camera are used by this loss to avoid very large numbers and ensure the stableness of training. However, online searching the visible 3D points from millions is not practical.
 Thus, we pre-render a depth map for each training image with a resolution of $256 \times 304$, based on its ground truth pose, and use the back projected 3D points from the depth map for training.

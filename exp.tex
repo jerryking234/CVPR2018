@@ -1,6 +1,6 @@
-\vspace{-0.1\baselineskip}
+\vspace{-0.8\baselineskip}
 \section{Experiments}
-\vspace{-0.1\baselineskip}
+\vspace{-0.4\baselineskip}
 \label{sec:experiments}
 We perform all experiments using our collected dataset, and evaluate multiple system settings for pose estimation and segmentation to validate each component.
 For GPS and IMU signal, despite we have multiple scans for the same road segments, it is still very limited for training. Thus, follow~\cite{vishal2015accurate}, we simulate noisy GPS and IMU by adding random perturbation $\epsilon$ \wrt the ground truth pose following uniform distributions. 
@@ -67,7 +67,7 @@ In \tabref{tbl:pose}, we show the performance of estimated translation $\ve{t}$ 
 Due to scene appearance similarity of the street-view, we did not obtain a reasonable model, \ie~results better than the noisy GPS/IMU signal.
 At the 2nd row, we show the median error of GPS and IMU from our simulation. 
 At the 3rd row, by using our pose CNN, the model can learn good relative pose between camera and GPS/IMU, which significantly reduces the error (60$\%$ for $\ve{t}$, 85$\%$ for $\ve{r})$. 
-By adding semantic cues, \ie road priori and semantic weights in \equref{eq:proj_loss}, the pose errors are further reduced, especially for rotation (from $0.982$ to $0.727$ at the 4th row). Actually, we found the most improvement is from semantic weighting, while the road priori helps marginally in this experiment so we drop the numbers. However, in the future, we would like to experiment larger noise and more data variations, which will better validate different cues.
+By adding semantic cues, \ie road priori and semantic weights in \equref{eq:proj_loss}, the pose errors are further reduced, especially for rotation (from $0.982$ to $0.727$ at the 4th row). Actually, we found the most improvement is from semantic weighting, while the road priori helps marginally in this experiment. However, later, we would like to experiment larger noise and more data variations, which will better validate different cues.
 
 For evaluating an video input, we setup a baseline of performing RNN directly on the GPS/IMU signal, and as shown at 'Pose RNN w/o CNN', the estimated $\ve{t}$ is even better than pose CNN, while $\ve{r}$ is comparably much worse. This meets our expectation since the speed of camera is easier to capture temporally than rotation. Another baseline we adopt is performing Kalman filter~\cite{kalman1960new} to the output from Pose CNN by assuming a constant speed which we set as the averaged speed from training sequences. As shown at 'Pose CNN w KF', it does improve slightly for translation, but harms rotation, which means the filter over smoothed the sequence. Finally when combining pose CNN and RNN, it achieves the best pose estimation both for $\ve{t}$ and $\ve{r}$.
 
@@ -101,7 +101,7 @@ SegCNN Final    &\textbf{69.93}$\pm$0.08  & \textbf{79.36}$\pm$0.08 &\textbf{95.
 \end{tabular}
 \caption{Compare the accuracy of different segment networks setting. $t$ is short for 'traffic' in the table. $\pm$ indicates the confidence region by 10 times simulation, which we drop for per-class accuracy. Our results are especially good at parsing of detailed structures and scene layouts, which is visualized in~\figref{fig:results}.}
 \label{tbl:segment}
-\vspace{-1.8\baselineskip}
+\vspace{-2.8\baselineskip}
 \end{table*}
 
 
