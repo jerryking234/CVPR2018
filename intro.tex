@@ -16,7 +16,7 @@ In applications like robotic navigation~\cite{ohno2003outdoor} or augment realit
 \end{figure*}
 
 % existing methods only consider one of the tasks with soly visual signal.
-Currently, most existing vision algorithms are trying to solve both tasks solely on visual signals.
+Currently, most state-of-the-art (SOTA) algorithms are trying to solve both tasks solely on visual signals.
 For instances, geometric based methods are relying on visual feature matching, \eg~systems of Perspective-n-Points (PnP)~\cite{haralick1994review,kneip2014upnp,campbell2017globally} when a 3D map and an image is provided, or systems of SLAM~\cite{engel2014lsd,mur2015orb,NewcombeLD11} when there is a video. Such systems are relying on local appearance, which could fail when confronted with low-texture environments.
 
 Most recently, deep learning based methods, \eg~for either images~\cite{Kendall_2015_ICCV} or videos~\cite{DBLP:journals/corr/ClarkWMTW17}, have been developed for real-time localization, which show good trade-offs between accuracy and speed.
@@ -49,7 +49,7 @@ In summary, the contributions of this paper are:
 The structure of this paper is organized as follows. We first give an overview of our system in \secref{sub:framework} and talk about related works in \secref{sec:related_work}. In \secref{sec:data_collection}, we describe the uniqueness of our data from the existing outdoor datasets, and introduce the collection and labelling process. 
 Then, \secref{sec:localize_and_parsing} presents detail of our system. We perform full evaluation quantitatively for both pose estimation and parsing in \secref{sec:experiments}, and \secref{sec:conclusion} concludes the paper and points out future directions. Finally, we will release our code, models and dataset with the publication of this paper.
 
-\vspace{-0.5\baselineskip}
+\vspace{-1.0\baselineskip}
 \subsection{Framework}
 \vspace{-0.6\baselineskip}
 \label{sub:framework}

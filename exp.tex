@@ -100,7 +100,6 @@ At 4th and 5th row, we show the results trained with rendered label map from pos
 However, when using the pose after RNN, better alignment is achieved and the segment accuracy improves significantly especially for thin structured regions like pole, as visualized in~\figref{fig:results}, which demonstrates the effectiveness of our strategy. 
 Here, we leave per-class results to the supplementary materials as space limitation.
 
-
 % \begin{table}[b]
 % \vspace{-1.0\baselineskip}
 % \center
@@ -125,4 +124,4 @@ Here, we leave per-class results to the supplementary materials as space limitat
 % \vspace{-1.3\baselineskip}
 % \end{table}
 
-In \figref{fig:results}, we visualize several examples from our dataset. In the figure, we can see the noisy pose (b), is progressively rectified by pose CNN (c) and pose RNN (d) from view of camera. Additionally, at (e) and (f), we compare the segment results without and with camera pose respectively. As can be seen at the boxed regions, the segment results with pose rendered label maps do provide better accuracy in terms of capturing region details at the boundary, discovering rare classes and keeping correct scene layout. All of above could be important for navigation, \eg figuring out the traffic signs and tele-poles that are visually hard to detect.
+In \figref{fig:results}, we visualize several examples from our results at the view of camera. In the figure, we can see the noisy pose (b), is progressively rectified by pose CNN (c) and pose RNN (d) from view of camera. Additionally, at (e) and (f), we compare the segment results without and with camera pose respectively. As can be seen at the boxed regions, the segment results with pose rendered label maps do provide better accuracy in terms of capturing region details at the boundary, discovering rare classes and keeping correct scene layout. All of above could be important for navigation, \eg figuring out the traffic signs and tele-poles that are visually hard to detect.
