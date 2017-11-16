@@ -1,4 +1,7 @@
+
+\vspace{-0.5\baselineskip}
 \section{Localizing camera and scene parsing.}
+\vspace{-0.3\baselineskip}
 \label{sec:localize_and_parsing}
 As shown in \secref{sub:framework}, our full system is based on a semantic 3D map and deep networks. In the following, we will first describe how a semantic label map is rendered from the 3D, then discuss the details of our network architectures and the loss functionals to train the whole system.
 
@@ -16,11 +19,22 @@ where $\hua{P}_c$ is the set of 3D points belong to class $c$, and $\hua{T}$ is 
 
 As shown in \figref{fig:data}(e), invalid values in-between those projected points are well in-painted, meanwhile the boundaries separating different semantic classes are also well preserved. Later, we insert such a rendered label map for the pose CNN, which guides the network to localize the camera.
 % By feeding in such a rendered map, it facilitates the CNN to better discover scene layouts both for pose estimation and scene parsing.
-Another possibility is to render a RGB image rather than a label map. However, we found label map works better, which may be due to it contains less noisy edges than rendered RGB image. \textcolor{red}{it is not certain, should we even bother to say it?}
+% Another possibility is to render a RGB image rather than a label map. However, we found label map works better, which may be due to it contains less noisy edges than rendered RGB image. \textcolor{red}{it is not certain, should we even bother to say it?}
 % AOne may wonder why we render semantic label map rather than synthesizing a RGB image for later inputs.
 % This is because intuitively label maps is invariant to color changes, which yields better boundaries reflecting the scene layout.
 
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=.8\linewidth]{fig/RNN.pdf}
+\end{center}
+   \caption{The GRU RNN network architecture for modeling a sequence of camera poses.}
+\label{fig:rnn}
+\vspace{-1.1\baselineskip}
+\end{figure}
+
+\vspace{-0.3\baselineskip}
 \subsection{Camera localization with motion prior}
+\vspace{-0.2\baselineskip}
 
 \textbf{Translation rectification with road prior.} One common localization priori for navigation is to use the 2D road map, by constraining the GPS signals inside the road regions. We adopt a similar strategy, since once the GPS signal is out of road regions, the rendered label map will be totally different from the street-view of camera, and no correspondence can be found by the network.
 
@@ -29,6 +43,14 @@ Then, at each pixel $[x, y] \in \mathbbm{Z}^2$ in the 2D map, an offset value $\
 
 During online testing, given a noisy translation $\ve{t}=[t_x, t_y, t_z]$, we can find the closest road points \wrt $\ve{t}$ using $[t_x, t_y] + \ve{f}(\lfloor t_x \rfloor, \lfloor t_y \rfloor)$ from our pre-calculated offset function. Then, a label map is rendered based on the rectified camera pose, which is later fed to pose networks.
 
+\begin{figure*}[t]
+\center
+\vspace{-0.6\baselineskip}
+\includegraphics[width=0.95\textwidth]{fig/segCNN.pdf}
+\caption{Architecture of the segment CNN with rendered label map as a segmentation priori. At bottom of each convolutional block, we show the filter size, and at top we mark the downsample rates of each block \wrt the input image size. The 'softmax' text box indicates the places a loss is calculated. Details are in \secref{subsec:parsing}.}
+\label{fig:segnet}
+\vspace{-1.2\baselineskip}
+\end{figure*}
 \textbf{CNN-GRU pose network architecture.}
 As shown in \figref{fig:framework}, our pose networks contain a pose CNN and a pose GRU-RNN. Particularly,
 the CNN of our pose network takes as inputs an image $\ve{I}$ and the rendered label map $\ve{L}$ from corresponding coarse camera pose $\ve{p}_i^c$. It outputs a 7 dimension vector $\hat{\ve{p}}_i$ representing the relative pose between the image and rendered label map, and we can get the pose \wrt the 3D map by $\ve{p}_i = \ve{p}_i^c + \hat{\ve{p}_i}$.
@@ -40,13 +62,7 @@ More specifically, we adopt a two layer GRU with 32 hidden states as illustrated
 In traditional navigation applications of estimating 2D poses,  Kalman filter~\cite{kalman1960new} is commonly applied by assuming either a constant velocity or acceleration.
 In our case, due to the speed of vehicle is unknown, transition of camera poses is learned from the training sequences, and in our experiments we show that the motion predicted from RNN is better than using a Kalman filter with a constant of speed, yielding further improvement over the estimated ones from our pose CNN.
 
-\begin{figure}[t]
-\begin{center}
-\includegraphics[width=\linewidth]{fig/RNN.pdf}
-\end{center}
-   \caption{The GRU RNN network architecture for modeling a sequence of camera poses.}
-\label{fig:rnn}
-\end{figure}
+
 
 \textbf{Pose loss.}
 Following the PoseNet~\cite{kendall2017geometric}, we use the geometric matching loss for training, which avoids the balancing factor between rotation and translation.
@@ -55,7 +71,7 @@ Formally, given a set of point cloud in 3D $~\hua{P}=\{\ve{x}\}$, and the loss f
 L(\ve{p}, \ve{p}^*) = \sum_{\ve{x} \in \hua{P}}\omega_{l_\ve{x}}|\pi(\ve{x}, \ve{p}) - \pi(\ve{x}, \ve{p}^*)|_2
 \label{eq:proj_loss}
 \end{align}
-where $\ve{p}$ and $\ve{p}^*$ are the estimated pose and ground truth pose respectively. $\pi()$ is a projective function that maps a 3D point $\ve{x}$ to 2D image coordinates. $l_\ve{x}$ is the semantic label of $\ve{x}$ and $\omega_{l_\ve{x}}$ is a weight factor dependant on the semantics. Here, we set stronger weights for point cloud belong to certain classes like traffic light, and we find it helps pose CNN to achieve better performance.
+where $\ve{p}$ and $\ve{p}^*$ are the estimated pose and ground truth pose respectively. $\pi()$ is a projective function that maps a 3D point $\ve{x}$ to 2D image coordinates. $l_\ve{x}$ is the semantic label of $\ve{x}$ and $\omega_{l_\ve{x}}$ is a weight factor dependent on the semantics. Here, we set stronger weights for point cloud belong to certain classes like traffic light, and we find it helps pose CNN to achieve better performance.
 In~\cite{kendall2017geometric}, usually the 3D points visible to the camera are used by this loss to avoid very large numbers and ensure the stableness of training. However, online searching the visible 3D points from millions is not practical.
 Thus, we pre-render a depth map for each training image with a resolution of $256 \times 304$, based on its ground truth pose, and use the back projected 3D points from the depth map for training.
 
@@ -73,14 +89,11 @@ Thus, we pre-render a depth map for each training image with a resolution of $25
 Having rectified pose at hand, one may direct render the semantic 3D world to the view of a camera, yielding a semantic parsing of the current image. However, the estimated pose is not perfect, fine regions such as light poles can be completely misaligned. Other issues also exist. Many 3D points are missing due to reflection, \eg regions of glasses, and points can be sparse at long distance. Last, dynamic objects in the input cannot be represented by the projected label map, yielding incorrect labelling. Thus, we propose an additional segment CNN to tackle these issues, while taking the rendered label map as segment priori.
 % In our experiments, we show with pose rendered label map as an additional input, the segment results are temporally more consistent and yields better accuracy.
 
-\begin{figure*}[]
-\includegraphics[width=\textwidth]{fig/segCNN.pdf}
-\caption{Architecture of the segment CNN with rendered label map as a segmentation priori. At bottom of each convolutional block, we show the filter size, and at top we mark the downsample rates of each block \wrt the input image size. The 'softmax' text box indicates the places a loss is calculated. Details are in \secref{subsec:parsing}.}
-\label{fig:segnet}
-\end{figure*}
+\textbf{Segment network architecture.} As discussed in \secref{sec:related_work}, heavily parametrized networks such as ResNet are not efficient enough for our online application. Thus, as illustrated in \figref{fig:segnet}, our segment CNN is a light-weight network containing an encoder-decoder network and a refinement network, and both have similar architecture with the corresponding ones used in DeMoN~\cite{ummenhofer2016demon} including 1D filters and mirror connections. However, since we have a segment prior from the 3D semantic map, we add a residual stream (top part of \figref{fig:segnet}), which encourages the network to learn the differences between the priori map with the ground truth. In~\cite{pohlen2016full}, a full resolution stream is used to keep spatial details, while here, the rendered label map also helps to keep the semantic spatial layout.
 
-\paragraph{Segment network architecture.} As discussed in \secref{sec:related_work}, heavily parametrized networks such as ResNet are not efficient enough for our online application. Thus, as illustrated in \figref{fig:segnet}, our segment CNN is a light-weight network containing an encoder-decoder network and a refinement network, and both have similar architecture with the corresponding ones used in DeMoN~\cite{ummenhofer2016demon}. However, since we have a segment prior from the 3D semantic map, we add a residual stream (top part of \figref{fig:segnet}), which encourages the network to learn the differences between the priori map with the ground truth. In~\cite{pohlen2016full}, a full resolution stream is used to keep spatial details, while here, the rendered label map also helps to keep the semantic spatial layout.
-
-Another notable difference for encoder-decoder network from DeMoN is that for network inputs, rather than directly concatenate the label map with input image, we first transform the label map to a score map through one-hot operation, and embed the score of each pixel to a 32 dimensional feature vector. This is to balance the two.\textcolor{red}{not very clear here, how is this balanced?} Then, we concatenate this feature vector with the first layer output from image, and keep the rest as the same with that in~\cite{ummenhofer2016demon}. For refinement network, we use the same strategy to handle the two inputs. Finally, the segment network produces a score map, yielding the semantic label of each pixel.
+Another notable difference for encoder-decoder network from DeMoN is that for network inputs, shown in \figref{fig:segnet}, rather than directly concatenate the label map with input image, we first transform the label map to a score map through one-hot operation, and embed the score of each pixel to a 32 dimensional feature vector. 
+% This is to balance the two.\textcolor{red}{not very clear here, how is this balanced?} 
+Then, we concatenate this feature vector with the first layer output from image, where the input channel imbalance between image and label map is alleviated for segmentation, which is shown to be useful by previous works~\cite{eigen2015predicting}.
+ For refinement network, we use the same strategy to handle the two inputs. Finally, the segment network produces a score map, yielding the semantic parsing of the given image.
 
 We train the segment network first with only RGB images, then fine-tune the network by adding the input of rendered label maps. This is because our network is trained from scratch, therefore it needs a large amount of data to learn effective features from images. However, the rendered label map from the estimated pose has on average 70$\%$ pixel accuracy, leaving only 30$\%$ of pixels having effective gradients. This could easily drive the network to over fit to the input label map, while slowing down the process towards learning features from images. Finally, for segmentation loss, we use the standard softmax loss, and add intermediate supervision right after the outputs from both the encoder and the decoder as indicated in \figref{fig:segnet}. 
