@@ -100,8 +100,6 @@
 \begin{abstract}
 % <<<<<<< HEAD
 % For many applications from augmented reality, autonomous driving, to robotics, to localize itself and to understand its surrounding via cameras are the must-have technologies. We here present a unified framework for simultaneous localization and scene parsing. Unique to our design is a sensor fusion scheme that combines visual image, motion sensors (GPS/IMU), and prior 3D semantic maps to achieve robust and real-time performance. More specifically, we assume that an initial rough pose can be obtained from consumer-grade GPS/IMU, based on which we could render a label map from the 3D semantic map. The initial label map, together with the image, is fed to a pose CNN jointly to yield a corrected camera pose.
-% =======
-
 For many applications from augmented reality, autonomous driving, to robotics, self-localization/camera pose estimation and scene parsing are the must-have technologies. We here present a unified framework to tackle these two problems simultaneously. Unique to our design is a sensor fusion scheme that combines visual image, motion sensors (GPS/IMU), and prior 3D semantic maps to achieve robustness and real-time performance. More specifically, we assume that an initial rough pose can be obtained from consumer-grade GPS/IMU, based on which a label map can be rendered from the 3D semantic map. The initial label map, together with the image, is fed into a pose CNN jointly to yield a corrected camera pose.
 % >>>>>>> 806e39db6ab40482a0104543be00175b327e9824
 %Visual-based outdoor navigation requires accurately localizing the camera and preferably per-pixel semantic understanding, which can be widely applied for autonomous driving, or augment reality \etc.
@@ -119,8 +117,6 @@ Based on the refined pose, a new label map is rendered, and is fed together with
 % =======
 In order to validate our approach, we build a dataset with registered 3D point clouds and video camera images. Both the point clouds and the images are semantically-labeled. Each video frame has ground truth pose from highly accurate motion sensors.
 We show that practically, pose estimation solely relying on images like PoseNet~\cite{Kendall_2015_ICCV} may fail due to street view confusion, and it is important to fuse multiple sensors. Finally, various ablation studies are performed, which demonstrate the effectiveness of the proposed system. In particular, we show that scene parsing and pose estimation are mutually beneficial in developing more robust and accurate learning networks.
-
-
 \end{abstract}
 \vspace{-0.5\baselineskip}
 
