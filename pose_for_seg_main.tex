@@ -49,7 +49,7 @@
 \usepackage{caption}
 \captionsetup{skip=3pt}
 
-% \cvprfinalcopy % *** Uncomment this line for the final submission
+\cvprfinalcopy % *** Uncomment this line for the final submission
 \newcommand{\figref}[1]{Fig\onedot~\ref{#1}}
 \newcommand{\equref}[1]{Eq\onedot~\eqref{#1}}
 \newcommand{\secref}[1]{Sec\onedot~\ref{#1}}
@@ -63,6 +63,7 @@
 
 \newcommand{\ve}[1]{{\mathbf #1}} % for displaying a vector or matrix
 \newcommand*\rot[1]{\rotatebox{45}{#1}}
+\newcommand*\rotf[1]{\rotatebox{35}{#1}}
 \newcommand{\hua}[1]{{\mathcal #1}}
 \newcommand{\scr}[1]{{\mathcal #1}}
 \newcommand{\by}[2]{\ensuremath{#1 \! \times \! #2}}
@@ -87,12 +88,18 @@
 \def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
 
 % Pages are numbered in submission mode, and unnumbered in camera-ready
-\ifcvprfinal\pagestyle{empty}\fi
+\ifcvprfinal\pagestyle{empty}%\fi
 
 \begin{document}
 
 %%%%%%%%% TITLE
 \title{DeLS-3D: Deep Localization and Segmentation with a 3D Semantic Map}
+
+
+\author{Peng Wang, Ruigang Yang, Binbin Cao, Wei Xu, Yuanqing Lin\\
+Baidu Research \\
+National Engineering Laboratory for Deep Learning Technology and Applications\\
+{\tt\small \{wangpeng54, yangruigang, caobinbin, wei.xu, linyuanqing\}@baidu.com}}
 
 \maketitle
 %\thispagestyle{empty}
@@ -101,7 +108,8 @@
 \begin{abstract}
 % <<<<<<< HEAD
 % For many applications from augmented reality, autonomous driving, to robotics, to localize itself and to understand its surrounding via cameras are the must-have technologies. We here present a unified framework for simultaneous localization and scene parsing. Unique to our design is a sensor fusion scheme that combines visual image, motion sensors (GPS/IMU), and prior 3D semantic maps to achieve robust and real-time performance. More specifically, we assume that an initial rough pose can be obtained from consumer-grade GPS/IMU, based on which we could render a label map from the 3D semantic map. The initial label map, together with the image, is fed to a pose CNN jointly to yield a corrected camera pose.
-For many applications from augmented reality, autonomous driving, to robotics, self-localization/camera pose estimation and scene parsing are the must-have technologies. We here present a unified framework to tackle these two problems simultaneously. Unique to our design is a sensor fusion scheme that combines visual image, motion sensors (GPS/IMU), and prior 3D semantic maps to achieve robustness and real-time performance. More specifically, we assume that an initial rough pose can be obtained from consumer-grade GPS/IMU, based on which a label map can be rendered from the 3D semantic map. The initial label map, together with the image, is fed into a pose CNN jointly to yield a corrected camera pose.
+For applications such as augmented reality, autonomous driving, self-localization/camera pose estimation and scene parsing are crucial technologies. In this paper, we propose a unified framework to tackle these two problems simultaneously. The uniqueness of our design is a sensor fusion scheme which integrates camera videos, motion sensors (GPS/IMU), and a 3D semantic map in order to achieve robustness and efficiency of the system. 
+Specifically, we first have an initial coarse camera pose obtained from consumer-grade GPS/IMU, based on which a label map can be rendered from the 3D semantic map. Then, the rendered label map and the RGB image are jointly fed into a pose CNN, yielding a corrected camera pose.
 % >>>>>>> 806e39db6ab40482a0104543be00175b327e9824
 %Visual-based outdoor navigation requires accurately localizing the camera and preferably per-pixel semantic understanding, which can be widely applied for autonomous driving, or augment reality \etc.
 %However, system solely relying on visual signal is non-robust due to visual confusion across multiple scenes.
@@ -109,15 +117,14 @@ For many applications from augmented reality, autonomous driving, to robotics, s
 %In this paper, we propose a deep learning based method for localizing the camera and parsing the recorded video simultaneously in a single framework, which fuses signals from camera and motion sensors like GPS and IMU.
 %Specifically in our setting, we have a 3D semantic world, and a video is recording online inside, meanwhile a non-accurate camera pose signal is observed.
 %In our system, at each timestamp, based on the obtained pose signal, we render a label map out of the 3D world, and feed it to a pose CNN jointly with the current frame of image, yielding a corrected camera pose.
-A multi-layer recurrent neural network (RNN) is deployed to further improve the pose accuracy with higher order temporal information.
-Based on the refined pose, a new label map is rendered, and is fed together with the input image into a segmentation CNN that yields per-pixel semantic label.
-
+In addition, to incorporate temporal information, a multi-layer recurrent neural network (RNN) is further deployed improve the pose accuracy.
+Finally, based on the pose from RNN, we render a new label map, which is fed together with the RGB image into a segment CNN which produces per-pixel semantic label.
 % <<<<<<< HEAD
 % In order to validate our approach we build a data set with a semantically-labeled real world 3D map, registered with many recorded videos. Each frame in the video has ground truth poses from highly accurate motion sensors.
 % We show that practically, pose estimation solely relying on images like PoseNet~\cite{Kendall_2015_ICCV} may fail due to street view confusion, and it is important to fuse multi sensors.  Finally, various ablation studies are performed, which demonstrate the effectiveness of the proposed system. In particular, we show that semantic parsing and pose estimation are mutually beneficial in developing more robust and accurate learning networks.
 % =======
 In order to validate our approach, we build a dataset with registered 3D point clouds and video camera images. Both the point clouds and the images are semantically-labeled. Each video frame has ground truth pose from highly accurate motion sensors.
-We show that practically, pose estimation solely relying on images like PoseNet~\cite{Kendall_2015_ICCV} may fail due to street view confusion, and it is important to fuse multiple sensors. Finally, various ablation studies are performed, which demonstrate the effectiveness of the proposed system. In particular, we show that scene parsing and pose estimation are mutually beneficial in developing more robust and accurate learning networks.
+We show that practically, pose estimation solely relying on images like PoseNet~\cite{Kendall_2015_ICCV} may fail due to street view confusion, and it is important to fuse multiple sensors. Finally, various ablation studies are performed, which demonstrate the effectiveness of the proposed system. In particular, we show that scene parsing and pose estimation are mutually beneficial to achieve a more robust and accurate system.
 \end{abstract}
 \vspace{-0.5\baselineskip}
 
@@ -136,9 +143,9 @@ We show that practically, pose estimation solely relying on images like PoseNet~
 In this paper, we present a deep learning based framework for camera self-localization and scene parsing with a given 3D semantic map for online videos, for the applications of visual-based outdoor robotic navigation. The algorithm fuses multi-sensors, is simple and runs efficient, meanwhile yields strong results in both of the tasks. More importantly, in our system, we show that the two information are mutually beneficial, where pose helps give good priori for segmentation and semantic guides a better localization. To perform the experiments, we created a dataset which contains a point-cloud based semantic 3D map and videos with ground truth camera pose and per-frame semantic labelling.
 % In addition, since semantics vary from one scene to another, it is unpractical to train a model at every scene like PoseNet~\cite{Kendall_2015_ICCV}, or a single model with millions of classes for segmentation. However, based on our system, as long as a 3D semantic model is built, pose estimation can be dependent on GPS/IMU, and images can be parsed accordingly, which we will nail at later.
 
-Our future work lays in three aspects. For dataset, additional to current data with few objects used in this paper, significantly larger and harder data will be collected.
-Besides dense point cloud, we will simplify the 3D semantic map with 3D models of road and buildings, based on which a better and faster projection rendering can be performed. 
-Moreover, for algorithm, we can close the loop of segmentation and pose estimation by follow the LSD-SLAM~\cite{engel2014lsd} to further re-localize the camera through per-pixel semantic matching, which could potentially further improve the pose accuracy.
+% Our future work lays in three aspects. For dataset, additional to current data with few objects used in this paper, significantly larger and harder data will be collected.
+% Besides dense point cloud, we will simplify the 3D semantic map with 3D models of road and buildings, based on which a better and faster projection rendering can be performed. 
+% Moreover, for algorithm, we can close the loop of segmentation and pose estimation by follow the LSD-SLAM~\cite{engel2014lsd} to further re-localize the camera through per-pixel semantic matching, which could potentially further improve the pose accuracy.
 % =======
 % In this paper, we present a unified framework for camera pose estimation and semantic scene parsing with 3D semantic map and deep networks, for the applications of visual-based autonomous navigation. The algorithm is simple and computational efficient while yielding strong results in both self-localization and background scene parsing. More importantly, the two information are mutually beneficial, where pose helps to give good prior for segmentation and semantic guides a better self-localization.
 

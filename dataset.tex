@@ -1,6 +1,6 @@
 
-\vspace{-0.3\baselineskip}
-\section{Dataset Preparation}
+\vspace{-0.5\baselineskip}
+\section{Dataset}
 \vspace{-0.3\baselineskip}
 
 \label{sec:data_collection}
@@ -27,7 +27,7 @@ Dataset & Real data & Camera pose & 3D semantic map & Video per-pixel label   \\
 \toprule[0.13 em]
 \vspace{-1.1\baselineskip}
 \end{tabular}
-\caption{Compare our dataset with the other related outdoor street-view datasets for our task. `Real data' means whether the data is collected from our physical world.
+\caption{Compare our dataset with the other related outdoor street-view datasets for our task. `Real data' means whether the data is collected from the physical world.
 `3D semantic map' means whether it contains a 3D map of scenes with semantic label. `Video per-pixel label' means whether it has per-pixel semantic label.}
  %'Temporal variations' mean whether the recorded video can roughly cover the whole scene, but have multiple.
 %\textcolor[rgb]{1.00,0.00,0.00}{we don't have temporal varations here, we didn't present results on this point neither, that last column needs to be removed. I would also argue the Toronto one is good.
@@ -37,9 +37,8 @@ Dataset & Real data & Camera pose & 3D semantic map & Video per-pixel label   \\
 \end{table}
 
 \textbf{Motivation.}
-As described in the \secref{sub:framework}, our system is design to work with available motion sensors and a semantic 3D map.
-However, similar outdoor datasets such as KITTI and CityScapes do not contain such information, in particular the 3D map. The Tortoro City dataset~\cite{wang2016torontocity} that may be used is not open to public yet. As summarized in \tabref{tbl:data}, we list several key properties that are required to perform our experiments.
-Note that none of existing public dataset satisfy our requirements.
+As described in the \secref{sub:framework}, our system is designed to work with available 3D motion sensors and a semantic 3D map.
+However, public outdoor datasets such as KITTI and CityScapes do not contain such information, in particular the 3D map. The TortoroCity dataset~\cite{wang2016torontocity} may be used while is not open to public yet. As summarized in \tabref{tbl:data}, we list several key requirements to perform our experiments, which none of current existing datasets fully satisfy.  
 % \textcolor[rgb]{1.00,0.00,0.00}{as I explained in the table, I suggest that we drop this argument, we need to have a 3D semantic map, none has it. the temporal effect needs to be tuned down, otherwise, it will be viewed as too narraow}
 % for training, we want the recorded video to roughly cover the 3D environment, so that when new images come in, appearance similar views had been seen during training. This means repeated recording at similar spatial locations are required in the data, which we call temporal variations in \tabref{tbl:data}.
 % However, most existing datasets are a temporal snapshot at some locations in the environment, which requires us to collect a new dataset ourselves.
@@ -53,12 +52,12 @@ In order to eliminate these inaccurate moving objects (circled in blue at \figre
 Formally, the condition to kept a point $\ve{x}$ in round $j$ is,
 {\vspace{-0.5\baselineskip}
 \begin{align}
-\sum_{i=0}^{r}{\mathbbm{1}(\exists~\|\ve{x}_i - \ve{x}_j\| < \epsilon_d )} / r \geq \delta
+\sum_{i=0}^{r}{\mathbbm{1}(\exists~\ve{x}_i \in \hua{P}_i~s.t.~\|\ve{x}_i - \ve{x}_j\| < \epsilon_d )} / r \geq \delta
 \end{align}
 }
-where $\delta = 0.7$ and $\epsilon_d = 0.025$ in our experiments, and $\mathbbm{1}()$ is an indicator function. 
+where $\delta = 0.6$ and $\epsilon_d = 0.025m$ in our setting, and $\mathbbm{1}()$ is an indicator function. 
 %Notice due to the symmetric property of $\ve{x}_i$ and $\ve{x}_j$, we obtain the static points for all rounds by looping over the points of a single round.
-We keep the refined point clouds as a static background $\hua{M}$ for further labelling.
+We keep the remained point clouds as a static background $\hua{M}$ for further labelling.
 
 For video capturing, we use two frontal cameras with a resolution of \by{2048}{2432}. The whole system including the LIDAR scanner and cameras is well calibrated.
 %\wrt the LIDAR scanner. Based on provided camera parameters from the hardware, all the images from videos are undistorted to match the 3D points.
@@ -69,7 +68,7 @@ For video capturing, we use two frontal cameras with a resolution of \by{2048}{2
 \includegraphics[width=\linewidth]{fig/dataset.pdf}
 \vspace{-1.7\baselineskip}
 \end{center}
-	\caption{An example of our collected street-view dataset. (a) Image. (b) Rendered label map with 3D point cloud projection, with an inaccurate moving object (rider) circled in blue. (c)Rendered label map with 3D point cloud projection after points with low temporal consistency being removed. (d) $\&$ (e) Rendered depth map of background and rendered label map after class dependent splatting in 3D point clouds (\secref{sub:render}). (f) Merged label map with missing region in-painted, moving objects and sky.}
+	\caption{An example of our collected street-view dataset. (a) Image. (b) Rendered label map with 3D point cloud projection, with an inaccurate moving object (rider) circled in blue. (c) Rendered label map with 3D point cloud projection after points with low temporal consistency being removed. (d) $\&$ (e) Rendered depth map of background and rendered label map after class dependent splatting in 3D point clouds (\secref{sub:render}). (f) Merged label map with missing region in-painted, moving objects and sky.}
 \label{fig:data}
 \vspace{-1.3\baselineskip}
 \end{figure}
@@ -85,7 +84,10 @@ Second, for static objects in each round, we prune out the points of static back
 %Due to the fact that when object is static, \eg parked cars, the shape and location of captured points will be highly recognizable, whereas when the object is moving on the road, the points will be fuzzy, we ask labeller to label those can be well recognized as static objects.
 Thirdly, after 3D-2D projection, only moving objects remain unlabeled. Here, we adopt an active labelling strategy, by first training an object segmentation model using a SOTA algorithm~\cite{WuSH16e}, and then refining the masks of moving objects manually.
 
-As shown in \figref{fig:data}(c), the labels obtained from above three steps are still not perfect. There are some unlabeled pixels that could be caused by missing points or reflection. We handle such issue by using splatting techniques in computer graphics, which is to turn each point into a small square as discussed in \secref{sub:render} (\figref{fig:data}(e)). The results are further refined to generate the final labels (\figref{fig:data}(f)).
-With such a strategy, we can greatly increase labelling efficiency and accuracy. For example, it could be very labor-intensive to label texture-rich regions like trees and poles, especially when occlusion happens.
-We provided the labelled video in our supplementary materials for readers who are interested.
+As shown in \figref{fig:data}(c), the labels obtained from above three steps are still not perfect. There are some unlabeled pixels that could be caused by missing points or reflection. We handle such issues by using the splatting technique in computer graphics, which turns each point into a small square as discussed in \secref{sub:render} (\figref{fig:data}(e)). The results are further refined to generate the final labels (\figref{fig:data}(f)).
+With such a strategy, we can greatly increase labelling efficiency and accuracy for video frames. For example, it could be very labor-intensive to label texture-rich regions like trees and poles, especially when occlusion happens. We provide the labelled video in our supplementary materials for readers who are interested. 
+
+Finally, due to space limitation, we elaborate the whole acquisition system, data collection and labelling process with an extended dataset paper~\cite{huang2018cvprw}, called ApolloScape, where a larger dataset with more labelled objects is collected and organized after our submission. 
+Nevertheless, in this paper, we experimented with a preliminary version of that dataset, which will be released separately for reproducibility of our results.
+
 
