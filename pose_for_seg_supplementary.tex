@@ -49,7 +49,7 @@
 \usepackage{caption}
 \captionsetup{skip=3pt}
 
-% \cvprfinalcopy % *** Uncomment this line for the final submission
+\cvprfinalcopy % *** Uncomment this line for the final submission
 \newcommand{\figref}[1]{Fig\onedot~\ref{#1}}
 \newcommand{\equref}[1]{Eq\onedot~\eqref{#1}}
 \newcommand{\secref}[1]{Sec\onedot~\ref{#1}}
@@ -100,8 +100,8 @@
 \begin{itemize}
 \vspace{-0.5\baselineskip}
     \setlength{\itemsep}{-2pt}
-    \item Video of labeled dataset, \ie images, labeled 3D semantic maps, camera pose inside and semantic labels of each frame.
-    \item Video of localization and parsing results, \ie rendered label map with simulated noisy pose, rectified pose after pose RNN and parsing results with the approach.
+    \item Video of labeled Zpark dataset, \ie images, labeled 3D semantic maps, camera pose inside and semantic labels of each frame.
+    \item Video of localization and parsing results over the Zpark dataset, \ie rendered label map with simulated noisy pose, rectified pose after pose RNN and parsing results with the approach.
 \vspace{-0.4\baselineskip}
 \end{itemize}
 
@@ -116,20 +116,29 @@ Baidu Cloud~\url{https://pan.baidu.com/s/1jHC1cmq}
 \begin{figure*}[!hbpt]
 \center
 \includegraphics[width=0.9\textwidth]{fig/dataset_video.pdf}
-\caption{Dataset overview. Left pane: the bird's eye view of our 3D map. Right top: the rendered label map from 3D with ground truth pose. Right bottom: the manually labeled map. Check video for the full content.}
+\caption{Zpark dataset overview. Left pane: the bird's eye view of our 3D map. Right top: the rendered label map from 3D with ground truth pose. Right bottom: the manually labeled map. Check video for the full content.}
 \label{fig:framework}
 \end{figure*}
 
 
-
 \section{Results} 
+Here we upload part of the results video online. Our full results will be released jointly with the datasets.
+
+\paragraph{Results for Zpark dataset.}
+
+Youtube link~\url{https://www.youtube.com/watch?v=fqglYBipNfQ}
+Baidu Cloud~\url{https://pan.baidu.com/s/1qYPwqgG}
+
+\paragraph{Results for Dlake dataset.} 
 Youtube link~\url{https://www.youtube.com/watch?v=fqglYBipNfQ}
 
-Baidu Cloud~\url{https://pan.baidu.com/s/1qYPwqgG}
+
+
 \begin{figure*}[!hbpt]
 \center
-\includegraphics[width=0.9\textwidth]{fig/results_video.pdf}
-\caption{The results of a full driving video. Left top: the rendered label map with noisy poses. Left bottom: the rendered label map from rectified poses. Right top: the parsing results. Right bottom: ground truth labeled map. Check the video for the full content.}
+\includegraphics[width=0.8\textwidth]{fig/results_video.pdf}
+\includegraphics[width=0.8\textwidth]{fig/results_video.pdf}
+\caption{The results of a driving video in Zpark dataset (top) and in Dlake dataset (bottom). Left top: the rendered label map with noisy poses. Left bottom: the rendered label map from rectified poses. Right top: the parsing results. Right bottom: ground truth labeled map. Check the video online for the full content.}
 \label{fig:framework}
 \end{figure*}
 
